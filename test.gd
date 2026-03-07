@@ -40,6 +40,7 @@ var player_next_level_exp = 100
 
 var player_max_hp = 100
 var player_current_hp = 100
+var player_str = 15 # 新增：主角基礎力量 (隨等級提升)
 var enemy_max_hp = 500
 var enemy_current_hp = 500
 var is_in_battle = false
@@ -333,7 +334,12 @@ func enemy_attack():
 	if player_current_hp == 0:
 		play_character_death_effect(player_sprite, player_hp_bar)
 
-func player_attack(damage: int):
+func player_attack(base_damage: int):
+	# 🍖 增加主角攻擊隨機性 (±20% 浮動)
+	var min_dmg = int(base_damage * 0.8)
+	var max_dmg = int(base_damage * 1.2)
+	var damage = randi_range(min_dmg, max_dmg)
+	
 	enemy_current_hp -= damage
 	if enemy_current_hp < 0: enemy_current_hp = 0
 		
@@ -360,6 +366,7 @@ func gain_exp(amount: int):
 		
 		player_max_hp += 20
 		player_current_hp = player_max_hp
+		player_str += 5 # 升級時增加基礎攻擊力
 		
 		leveled_up = true
 
@@ -415,9 +422,12 @@ func check_win():
 				unique_winning_nodes.append(node)
 		
 		play_win_effects(unique_winning_nodes)
-		
-		if is_in_battle and not just_encountered:
-			player_attack(total_win)
+	
+	# 主角在戰鬥中每一輪都會反擊
+	if is_in_battle and not just_encountered:
+		# 傷害 = 主角力量 + 贏得的金幣 (讓轉到大獎時依然有爆擊感)
+		var total_damage = player_str + total_win
+		player_attack(total_damage)
 	
 	if not was_in_battle:
 		if randf() <= 0.25:
