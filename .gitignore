@@ -1,0 +1,34 @@
+# Godot 4+ 核心忽略項目
+.godot/
+.nomedia
+
+# 暫存與翻譯檔
+*.tmp
+*.translation
+
+# Mono/C# 相關
+.mono/
+data_*/
+mono_crash.*.json
+[Bb]in/
+[Oo]bj/
+*.sln
+*.csproj
+*.user
+
+# 編輯器相關
+.vscode/
+.idea/
+
+# 作業系統暫存
+.DS_Store
+Thumbs.db
+
+# 匯出資料夾與檔案
+/android/
+web_export/
+*.exe
+*.zip
+*.apk
+*.ipa
+*.dmg

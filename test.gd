@@ -1,0 +1,476 @@
+extends Control
+
+@onready var reel_container = $ReelContainer
+@onready var spin_button = $SpinButton
+
+# 💰 經濟系統 UI 節點
+@onready var gold_label = $GoldLabel
+@onready var bet_label = $BetLabel
+@onready var plus_button = $PlusButton
+@onready var minus_button = $MinusButton
+
+# ⚔️ 戰鬥系統 UI 節點
+@onready var player_hp_bar = $Player/HealthBar
+@onready var enemy_hp_bar = $Enemy/HealthBar
+@onready var player_sprite = $Player/Sprite
+@onready var enemy_sprite = $Enemy/Sprite
+@onready var enemy_node = $Enemy
+@onready var heal_button = $Player/HealButton
+@onready var level_label = $Player/LevelLabel
+@onready var mute_button = $MuteButton
+
+var player_effect_tween: Tween
+var enemy_effect_tween: Tween
+
+var audio_players = {}
+var is_muted = false
+
+var current_gold = 1000
+var current_bet = 10
+
+var player_level = 1
+var player_current_exp = 0
+var player_next_level_exp = 100
+
+var player_max_hp = 100
+var player_current_hp = 100
+var enemy_max_hp = 500
+var enemy_current_hp = 500
+var is_in_battle = false
+var just_encountered = false
+
+var enemies_data = [
+	{"name": "幽靈 (Ghost)", "texture": preload("res://assets/ghost.png"), "hp": 200},
+	{"name": "哥布林 (Goblin)", "texture": preload("res://assets/goblin.png"), "hp": 150},
+	{"name": "石巨人 (Golem)", "texture": preload("res://assets/golem.png"), "hp": 800},
+	{"name": "半獸人 (Orc)", "texture": preload("res://assets/orc.png"), "hp": 350},
+	{"name": "惡龍 (Dragon)", "texture": preload("res://assets/dragon.png"), "hp": 600}
+]
+
+var symbols_data = {
+	"Cherry": {"weight": 40, "texture": preload("res://assets/cherry.png"), "payout_multiplier": 2},
+	"Lemon": {"weight": 30, "texture": preload("res://assets/lemon.png"), "payout_multiplier": 3},
+	"Bar": {"weight": 15, "texture": preload("res://assets/bar.png"), "payout_multiplier": 5},
+	"Seven": {"weight": 10, "texture": preload("res://assets/seven.png"), "payout_multiplier": 10},
+	"Diamond": {"weight": 5, "texture": preload("res://assets/diamond.png"), "payout_multiplier": 50}
+}
+
+var reels = []
+var is_spinning = false
+var icon_height = 104
+var current_board = []
+var current_enemy_name = ""
+
+func _ready() -> void:
+	randomize()
+	setup_reels()
+	setup_audio()
+	
+	spin_button.pressed.connect(spin_reels)
+	plus_button.pressed.connect(increase_bet)
+	minus_button.pressed.connect(decrease_bet)
+	heal_button.pressed.connect(heal_player)
+	mute_button.pressed.connect(toggle_mute)
+	
+	update_ui()
+	init_battle_system()
+	
+	enemy_node.visible = false
+	is_in_battle = false
+
+func setup_audio():
+	var sound_files = {
+		"spin": "res://assets/spin.wav",
+		"win": "res://assets/win.wav",
+		"attack": "res://assets/attack.wav",
+		"heal": "res://assets/heal.wav",
+		"level_up": "res://assets/levelup.wav"
+	}
+	
+	var sound_volumes = {
+		"spin": - 15.0,
+		"win": 0.0,
+		"attack": - 5.0,
+		"heal": 0.0,
+		"level_up": 2.0
+	}
+	
+	for sound_name in sound_files.keys():
+		var player = AudioStreamPlayer.new()
+		if ResourceLoader.exists(sound_files[sound_name]):
+			player.stream = load(sound_files[sound_name])
+			if sound_volumes.has(sound_name):
+				player.volume_db = sound_volumes[sound_name]
+		else:
+			print("⚠️ 找不到音效檔案：", sound_files[sound_name], " (將會靜音處理)")
+			
+		add_child(player)
+		audio_players[sound_name] = player
+
+# 🌟 🌟 🌟 修改：透過 AudioServer 控制總音量 🌟 🌟 🌟
+func toggle_mute():
+	is_muted = !is_muted
+	
+	# 取得 Godot 的 "Master" (主音軌) 索引號碼
+	var master_bus_index = AudioServer.get_bus_index("Master")
+	
+	# 直接把整個遊戲的主音軌設定為靜音 (或解除靜音)
+	AudioServer.set_bus_mute(master_bus_index, is_muted)
+	
+	if is_muted:
+		mute_button.text = "🔇 Sound OFF"
+	else:
+		mute_button.text = "🔊 Sound ON"
+
+func play_sound(sound_name: String):
+	# 🌟 移除了這裡的 if is_muted: return，讓音效可以照常「無聲播放」
+	if audio_players.has(sound_name) and audio_players[sound_name].stream != null:
+		audio_players[sound_name].play()
+
+func stop_sound(sound_name: String):
+	if audio_players.has(sound_name) and audio_players[sound_name].playing:
+		audio_players[sound_name].stop()
+
+func update_ui():
+	gold_label.text = "Gold: " + str(current_gold)
+	bet_label.text = "Bet: " + str(current_bet)
+	level_label.text = "Lv: " + str(player_level) + "\nEXP: " + str(player_current_exp) + " / " + str(player_next_level_exp)
+
+func increase_bet():
+	if is_spinning: return
+	current_bet += 10
+	if current_bet > current_gold:
+		current_bet = current_gold
+	update_ui()
+
+func decrease_bet():
+	if is_spinning: return
+	current_bet -= 10
+	if current_bet < 10:
+		current_bet = 10
+	update_ui()
+
+func heal_player():
+	if player_current_hp <= 0: return
+	if player_current_hp >= player_max_hp: return
+	if current_gold < 50: return
+		
+	current_gold -= 50
+	player_current_hp += 10
+	if player_current_hp > player_max_hp:
+		player_current_hp = player_max_hp
+		
+	update_ui()
+	player_hp_bar.value = player_current_hp
+	play_heal_effect(player_sprite)
+	play_sound("heal")
+
+func init_battle_system():
+	player_hp_bar.max_value = player_max_hp
+	player_hp_bar.value = player_current_hp
+
+func setup_reels():
+	for control_node in reel_container.get_children():
+		var scroll_vbox = VBoxContainer.new()
+		scroll_vbox.add_theme_constant_override("separation", 4)
+		control_node.add_child(scroll_vbox)
+		reels.append(scroll_vbox)
+		
+		for i in range(25):
+			var icon = TextureRect.new()
+			icon.texture = symbols_data[get_random_symbol()]["texture"]
+			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			icon.custom_minimum_size = Vector2(100, 100)
+			icon.pivot_offset = Vector2(50, 50)
+			scroll_vbox.add_child(icon)
+			
+		scroll_vbox.position.y = - (22 * icon_height)
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_accept"):
+		spin_reels()
+
+func spin_reels():
+	if is_spinning or player_current_hp <= 0: return
+	if current_gold < current_bet: return
+		
+	is_spinning = true
+	current_gold -= current_bet
+	update_ui()
+	just_encountered = false
+	
+	play_sound("spin")
+	
+	current_board.clear()
+	for i in range(5):
+		var column = []
+		for j in range(3):
+			column.append(get_random_symbol())
+		current_board.append(column)
+	
+	for i in range(reels.size()):
+		var scroll_vbox = reels[i]
+		for j in range(25):
+			if j >= 22:
+				var symbol_name = current_board[i][j - 22]
+				scroll_vbox.get_child(j).texture = symbols_data[symbol_name]["texture"]
+				scroll_vbox.get_child(j).rotation_degrees = 0
+				scroll_vbox.get_child(j).modulate = Color.WHITE
+			else:
+				var random_symbol = get_random_symbol()
+				scroll_vbox.get_child(j).texture = symbols_data[random_symbol]["texture"]
+			
+		scroll_vbox.position.y = 0
+		var tween = create_tween()
+		tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		var target_y = - (22 * icon_height)
+		var spin_duration = 1.5 + (i * 0.3)
+		tween.tween_property(scroll_vbox, "position:y", target_y, spin_duration)
+		
+		if i == reels.size() - 1:
+			tween.finished.connect(func():
+				is_spinning = false
+				stop_sound("spin")
+				check_win()
+			)
+
+func start_encounter():
+	is_in_battle = true
+	
+	var random_index = randi() % enemies_data.size()
+	var selected_enemy = enemies_data[random_index]
+	current_enemy_name = selected_enemy["name"]
+	
+	if enemy_effect_tween and enemy_effect_tween.is_valid():
+		enemy_effect_tween.kill()
+	
+	enemy_sprite.modulate = Color.WHITE
+	enemy_hp_bar.modulate.a = 1.0
+	
+	enemy_sprite.texture = selected_enemy["texture"]
+	enemy_max_hp = selected_enemy["hp"]
+	enemy_current_hp = enemy_max_hp
+	
+	enemy_hp_bar.max_value = enemy_max_hp
+	enemy_hp_bar.value = enemy_current_hp
+	
+	enemy_node.visible = true
+	
+	enemy_sprite.modulate.a = 0.0
+	enemy_hp_bar.modulate.a = 0.0
+	enemy_effect_tween = create_tween().set_parallel(true)
+	enemy_effect_tween.tween_property(enemy_sprite, "modulate:a", 1.0, 0.2)
+	enemy_effect_tween.tween_property(enemy_hp_bar, "modulate:a", 1.0, 0.2)
+
+func enemy_attack():
+	var damage = randi_range(10, 20)
+	player_current_hp -= damage
+	if player_current_hp < 0: player_current_hp = 0
+		
+	player_hp_bar.value = player_current_hp
+	play_character_damage_effect(player_sprite)
+	play_floating_text(player_sprite, "ATTACK!!!")
+	play_sound("attack")
+	
+	if player_current_hp == 0:
+		play_character_death_effect(player_sprite, player_hp_bar)
+
+func player_attack(damage: int):
+	enemy_current_hp -= damage
+	if enemy_current_hp < 0: enemy_current_hp = 0
+		
+	enemy_hp_bar.value = enemy_current_hp
+	play_character_damage_effect(enemy_sprite)
+	play_floating_text(enemy_sprite, "ATTACK!!!")
+	play_sound("attack")
+	
+	gain_exp(damage)
+	
+	if enemy_current_hp == 0:
+		is_in_battle = false
+		play_character_death_effect(enemy_sprite, enemy_hp_bar)
+
+func gain_exp(amount: int):
+	player_current_exp += amount
+	var leveled_up = false
+	
+	while player_current_exp >= player_next_level_exp:
+		player_current_exp -= player_next_level_exp
+		player_level += 1
+		player_next_level_exp = int(player_next_level_exp * 1.5)
+		
+		player_max_hp += 20
+		player_current_hp = player_max_hp
+		player_hp_bar.max_value = player_max_hp
+		player_hp_bar.value = player_current_hp
+		
+		leveled_up = true
+
+	update_ui()
+	if leveled_up:
+		play_level_up_effect()
+
+func check_win():
+	var total_win = 0
+	var winning_nodes = []
+	var was_in_battle = is_in_battle
+	
+	for x in range(5):
+		var s1 = current_board[x][0]
+		var s2 = current_board[x][1]
+		var s3 = current_board[x][2]
+		
+		if s1 == s2 and s2 == s3:
+			total_win += current_bet * symbols_data[s1]["payout_multiplier"]
+			winning_nodes.append(reels[x].get_child(22))
+			winning_nodes.append(reels[x].get_child(23))
+			winning_nodes.append(reels[x].get_child(24))
+			
+	for y in range(3):
+		var current_symbol = current_board[0][y]
+		var match_count = 1
+		var current_line_nodes = [reels[0].get_child(22 + y)]
+		
+		for x in range(1, 5):
+			if current_board[x][y] == current_symbol:
+				match_count += 1
+				current_line_nodes.append(reels[x].get_child(22 + y))
+			else:
+				if match_count >= 3:
+					winning_nodes.append_array(current_line_nodes)
+					total_win += calculate_line_win(current_symbol, match_count)
+				current_symbol = current_board[x][y]
+				match_count = 1
+				current_line_nodes = [reels[x].get_child(22 + y)]
+				
+		if match_count >= 3:
+			winning_nodes.append_array(current_line_nodes)
+			total_win += calculate_line_win(current_symbol, match_count)
+
+	if total_win > 0:
+		current_gold += total_win
+		update_ui()
+		play_sound("win")
+		
+		var unique_winning_nodes = []
+		for node in winning_nodes:
+			if not node in unique_winning_nodes:
+				unique_winning_nodes.append(node)
+		
+		play_win_effects(unique_winning_nodes)
+		
+		if is_in_battle and not just_encountered:
+			player_attack(total_win)
+	
+	if not was_in_battle:
+		if randf() <= 0.25:
+			start_encounter()
+			just_encountered = true
+	else:
+		if is_in_battle and not just_encountered:
+			if enemy_current_hp > 0:
+				if randf() <= 0.30:
+					enemy_attack()
+
+func calculate_line_win(symbol: String, count: int) -> int:
+	var base_win = current_bet * symbols_data[symbol]["payout_multiplier"]
+	if count == 4: return base_win * 2
+	elif count == 5: return base_win * 5
+	else: return base_win
+
+func play_win_effects(nodes: Array):
+	for icon_node in nodes:
+		if not icon_node is TextureRect: continue
+		var shake_tween = create_tween()
+		var flash_tween = create_tween()
+		for i in range(5):
+			shake_tween.tween_property(icon_node, "rotation_degrees", -10, 0.02)
+			shake_tween.tween_property(icon_node, "rotation_degrees", 10, 0.02)
+		shake_tween.tween_property(icon_node, "rotation_degrees", 0, 0.02)
+		
+		for i in range(3):
+			flash_tween.tween_property(icon_node, "modulate", Color(2, 0, 0, 1), 0.06)
+			flash_tween.tween_property(icon_node, "modulate", Color.WHITE, 0.06)
+
+func play_character_damage_effect(sprite: TextureRect):
+	if not sprite: return
+	var tween = create_tween()
+	
+	if sprite == player_sprite:
+		if player_effect_tween and player_effect_tween.is_valid(): player_effect_tween.kill()
+		player_effect_tween = tween
+	else:
+		if enemy_effect_tween and enemy_effect_tween.is_valid(): enemy_effect_tween.kill()
+		enemy_effect_tween = tween
+		
+	tween.tween_property(sprite, "modulate", Color(1, 0, 0, 1), 0.1)
+	tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
+
+func play_character_death_effect(sprite: TextureRect, hp_bar: ProgressBar):
+	var tween = create_tween().set_parallel(true)
+	
+	if sprite == player_sprite:
+		if player_effect_tween and player_effect_tween.is_valid(): player_effect_tween.kill()
+		player_effect_tween = tween
+	else:
+		if enemy_effect_tween and enemy_effect_tween.is_valid(): enemy_effect_tween.kill()
+		enemy_effect_tween = tween
+		
+	if sprite: tween.tween_property(sprite, "modulate:a", 0.0, 1.5)
+	if hp_bar: tween.tween_property(hp_bar, "modulate:a", 0.0, 1.5)
+
+func play_heal_effect(sprite: TextureRect):
+	if not sprite: return
+	var tween = create_tween()
+	
+	if player_effect_tween and player_effect_tween.is_valid(): player_effect_tween.kill()
+	player_effect_tween = tween
+	
+	tween.tween_property(sprite, "modulate", Color(0, 2, 0, 1), 0.1)
+	tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
+
+func play_level_up_effect():
+	if not player_sprite: return
+	var tween = create_tween().set_parallel(true)
+	
+	if player_effect_tween and player_effect_tween.is_valid(): player_effect_tween.kill()
+	player_effect_tween = tween
+	
+	tween.tween_property(player_sprite, "modulate", Color(2, 2, 0, 1), 0.2)
+	tween.tween_property(player_sprite, "modulate", Color.WHITE, 0.5).set_delay(0.2)
+	tween.tween_property(player_sprite, "scale", Vector2(1.2, 1.2), 0.2)
+	tween.tween_property(player_sprite, "scale", Vector2(1.0, 1.0), 0.5).set_delay(0.2).set_trans(Tween.TRANS_BOUNCE)
+	
+	play_sound("level_up")
+
+func play_floating_text(target_sprite: TextureRect, text: String):
+	if not target_sprite: return
+	
+	var label = Label.new()
+	label.text = text
+	
+	label.add_theme_color_override("font_color", Color(1, 0, 0, 1))
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
+	label.add_theme_constant_override("outline_size", 4)
+	label.add_theme_font_size_override("font_size", 28)
+	
+	target_sprite.add_child(label)
+	label.position = Vector2(target_sprite.size.x / 2 - 60, 20)
+	
+	var tween = create_tween().set_parallel(true)
+	tween.tween_property(label, "position:y", label.position.y - 80, 1.0).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(label, "modulate:a", 0.0, 1.0).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.chain().tween_callback(label.queue_free)
+
+func get_random_symbol() -> String:
+	var total_weight = 0
+	for data in symbols_data.values():
+		total_weight += data["weight"]
+	var random_value = randi() % total_weight
+	var current_weight = 0
+	for symbol in symbols_data.keys():
+		current_weight += symbols_data[symbol]["weight"]
+		if random_value < current_weight:
+			return symbol
+	return ""
