@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://6mqsmfvoox0s" path="res://test.gd" id="1_ig7tw"]
 [ext_resource type="Texture2D" uid="uid://btuvxh2j2a7ku" path="res://assets/player.png" id="2_0xm2m"]
+[ext_resource type="Texture2D" uid="uid://7mrxe0bmk7ge" path="res://assets/slot_frame.png" id="3_frame"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1bvp3"]
 bg_color = Color(0.32156864, 0.7254902, 0, 1)
@@ -10,6 +11,35 @@ border_width_top = 2
 border_width_right = 2
 border_width_bottom = 6
 border_color = Color(1, 1, 1, 0.313726)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.392157)
+shadow_size = 4
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed_spin"]
+bg_color = Color(0.2, 0.5, 0, 1)
+border_width_left = 2
+border_width_top = 4
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 0.2)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_size = 2
+shadow_offset = Vector2(0, 2)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hover_spin"]
+bg_color = Color(0.4, 0.8, 0.1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 6
+border_color = Color(1, 1, 1, 0.5)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
@@ -33,38 +63,8 @@ shadow_color = Color(0, 0, 0, 0.392157)
 shadow_size = 4
 shadow_offset = Vector2(0, 4)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7mycd"]
-bg_color = Color(0.80125064, 0, 0.011332289, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 6
-border_color = Color(1, 1, 1, 0.313726)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-shadow_color = Color(0, 0, 0, 0.392157)
-shadow_size = 4
-shadow_offset = Vector2(0, 4)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hover_spin"]
-bg_color = Color(0.4, 0.8, 0.1, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 6
-border_color = Color(1, 1, 1, 0.5)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-shadow_color = Color(0, 0, 0, 0.392157)
-shadow_size = 4
-shadow_offset = Vector2(0, 4)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed_spin"]
-bg_color = Color(0.2, 0.5, 0, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed_plus"]
+bg_color = Color(0, 0.2, 0.5, 1)
 border_width_left = 2
 border_width_top = 4
 border_width_right = 2
@@ -92,8 +92,23 @@ shadow_color = Color(0, 0, 0, 0.392157)
 shadow_size = 4
 shadow_offset = Vector2(0, 4)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed_plus"]
-bg_color = Color(0, 0.2, 0.5, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7mycd"]
+bg_color = Color(0.80125064, 0, 0.011332289, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 6
+border_color = Color(1, 1, 1, 0.313726)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.392157)
+shadow_size = 4
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed_minus"]
+bg_color = Color(0.5, 0, 0, 1)
 border_width_left = 2
 border_width_top = 4
 border_width_right = 2
@@ -120,20 +135,6 @@ corner_radius_bottom_left = 12
 shadow_color = Color(0, 0, 0, 0.392157)
 shadow_size = 4
 shadow_offset = Vector2(0, 4)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed_minus"]
-bg_color = Color(0.5, 0, 0, 1)
-border_width_left = 2
-border_width_top = 4
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(1, 1, 1, 0.2)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-shadow_size = 2
-shadow_offset = Vector2(0, 2)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0xm2m"]
 bg_color = Color(0.53333336, 0.49411765, 0.47058824, 1)
@@ -164,6 +165,24 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 1)
+
+[node name="SlotMachineFrame" type="TextureRect" parent="." unique_id=357997982]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -896.0
+offset_top = -549.0
+offset_right = -256.0
+offset_bottom = 91.0
+grow_horizontal = 0
+grow_vertical = 0
+scale = Vector2(1.0273138, 0.6998301)
+mouse_filter = 2
+texture = ExtResource("3_frame")
+expand_mode = 1
 
 [node name="ReelContainer" type="HBoxContainer" parent="." unique_id=176106531]
 layout_mode = 1
@@ -207,13 +226,13 @@ layout_mode = 2
 [node name="SpinButton" type="Button" parent="." unique_id=1562554781]
 layout_mode = 0
 offset_left = 513.0
-offset_top = 498.0
+offset_top = 571.0
 offset_right = 639.0
-offset_bottom = 551.0
+offset_bottom = 624.0
 theme_override_font_sizes/font_size = 32
-theme_override_styles/hover = SubResource("StyleBoxFlat_hover_spin")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed_spin")
 theme_override_styles/normal = SubResource("StyleBoxFlat_1bvp3")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed_spin")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover_spin")
 text = "SPIN"
 
 [node name="GoldLabel" type="Label" parent="." unique_id=1863285379]
@@ -238,32 +257,32 @@ text = "Bet: 10"
 [node name="PlusButton" type="Button" parent="." unique_id=1753599340]
 layout_mode = 0
 offset_left = 663.0
-offset_top = 498.0
+offset_top = 571.0
 offset_right = 713.0
-offset_bottom = 551.0
+offset_bottom = 624.0
 theme_override_font_sizes/font_size = 32
-theme_override_styles/hover = SubResource("StyleBoxFlat_hover_plus")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed_plus")
 theme_override_styles/normal = SubResource("StyleBoxFlat_lquwl")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed_plus")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover_plus")
 text = "+"
 
 [node name="MinusButton" type="Button" parent="." unique_id=377737432]
 layout_mode = 0
 offset_left = 439.0
-offset_top = 498.0
+offset_top = 571.0
 offset_right = 489.0
-offset_bottom = 551.0
+offset_bottom = 624.0
 theme_override_font_sizes/font_size = 32
-theme_override_styles/hover = SubResource("StyleBoxFlat_hover_minus")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed_minus")
 theme_override_styles/normal = SubResource("StyleBoxFlat_7mycd")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed_minus")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover_minus")
 text = "-"
 
 [node name="Player" type="VBoxContainer" parent="." unique_id=871131178]
 layout_mode = 0
-offset_left = 91.0
+offset_left = 51.0
 offset_top = 170.0
-offset_right = 241.0
+offset_right = 201.0
 offset_bottom = 434.0
 
 [node name="LevelLabel" type="Label" parent="Player" unique_id=1294750270]
@@ -278,7 +297,7 @@ theme_override_styles/background = SubResource("StyleBoxFlat_0xm2m")
 theme_override_styles/fill = SubResource("StyleBoxFlat_h2yge")
 show_percentage = false
 
-[node name="HPLabel" type="Label" parent="Player/HealthBar"]
+[node name="HPLabel" type="Label" parent="Player/HealthBar" unique_id=44743121]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -303,9 +322,9 @@ text = "Heal (-50G / +10)"
 
 [node name="Enemy" type="VBoxContainer" parent="." unique_id=1445440739]
 layout_mode = 0
-offset_left = 916.0
+offset_left = 966.0
 offset_top = 224.0
-offset_right = 1066.0
+offset_right = 1116.0
 offset_bottom = 408.0
 
 [node name="HealthBar" type="ProgressBar" parent="Enemy" unique_id=1098972109]
@@ -315,7 +334,7 @@ theme_override_styles/background = SubResource("StyleBoxFlat_0xm2m")
 theme_override_styles/fill = SubResource("StyleBoxFlat_h2yge")
 show_percentage = false
 
-[node name="HPLabel" type="Label" parent="Enemy/HealthBar"]
+[node name="HPLabel" type="Label" parent="Enemy/HealthBar" unique_id=610767884]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

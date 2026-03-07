@@ -196,6 +196,7 @@ func setup_reels():
 			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			icon.custom_minimum_size = Vector2(100, 100)
 			icon.pivot_offset = Vector2(50, 50)
+			icon.modulate = Color(0.8, 0.8, 0.8) # Darken the icons
 			scroll_vbox.add_child(icon)
 			
 		scroll_vbox.position.y = - (22 * icon_height)
@@ -229,10 +230,11 @@ func spin_reels():
 				var symbol_name = current_board[i][j - 22]
 				scroll_vbox.get_child(j).texture = symbols_data[symbol_name]["texture"]
 				scroll_vbox.get_child(j).rotation_degrees = 0
-				scroll_vbox.get_child(j).modulate = Color.WHITE
+				scroll_vbox.get_child(j).modulate = Color(0.8, 0.8, 0.8)
 			else:
 				var random_symbol = get_random_symbol()
 				scroll_vbox.get_child(j).texture = symbols_data[random_symbol]["texture"]
+				scroll_vbox.get_child(j).modulate = Color(0.8, 0.8, 0.8)
 			
 		scroll_vbox.position.y = 0
 		var tween = create_tween()
