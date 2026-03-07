@@ -87,7 +87,8 @@ func setup_audio():
 		"attack": "res://assets/attack.wav",
 		"heal": "res://assets/heal.wav",
 		"level_up": "res://assets/levelup.wav",
-		"encounter": "res://assets/encounter.wav"
+		"encounter": "res://assets/encounter.wav",
+		"defeat": "res://assets/defeat.wav"
 	}
 	
 	var sound_volumes = {
@@ -96,7 +97,8 @@ func setup_audio():
 		"attack": - 15.0,
 		"heal": - 15.0,
 		"level_up": - 15.0,
-		"encounter": - 10.0
+		"encounter": - 10.0,
+		"defeat": - 10.0
 	}
 	
 	for sound_name in sound_files.keys():
@@ -308,6 +310,7 @@ func player_attack(damage: int):
 	if enemy_current_hp == 0:
 		is_in_battle = false
 		play_character_death_effect(enemy_sprite, enemy_hp_bar)
+		play_sound("defeat")
 
 func gain_exp(amount: int):
 	player_current_exp += amount
