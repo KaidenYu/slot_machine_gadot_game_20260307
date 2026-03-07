@@ -77,6 +77,10 @@ func _ready() -> void:
 	update_ui()
 	init_battle_system()
 	
+	# 🌟 強行設定縮放中心點為圖片中心，避免被 Container 重置
+	player_sprite.pivot_offset = Vector2(75, 75)
+	enemy_sprite.pivot_offset = Vector2(75, 75)
+	
 	enemy_node.visible = false
 	is_in_battle = false
 

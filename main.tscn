@@ -314,7 +314,6 @@ layout_mode = 2
 texture = ExtResource("2_0xm2m")
 expand_mode = 1
 stretch_mode = 5
-pivot_offset = Vector2(75, 75)
 
 [node name="HealButton" type="Button" parent="Player" unique_id=308496225]
 layout_mode = 2
@@ -352,7 +351,6 @@ layout_mode = 2
 texture = SubResource("CompressedTexture2D_0xm2m")
 expand_mode = 1
 stretch_mode = 5
-pivot_offset = Vector2(75, 75)
 
 [node name="MuteButton" type="Button" parent="." unique_id=1675627135]
 layout_mode = 0
