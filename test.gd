@@ -142,13 +142,13 @@ func update_ui():
 	update_hp_display()
 
 func update_hp_display():
-	player_hp_bar.value = player_current_hp
 	player_hp_bar.max_value = player_max_hp
+	player_hp_bar.value = player_current_hp
 	player_hp_label.text = str(player_current_hp) + " / " + str(player_max_hp)
 	
 	if enemy_node.visible:
+		enemy_hp_bar.max_value = enemy_current_hp
 		enemy_hp_bar.value = enemy_current_hp
-		enemy_hp_bar.max_value = enemy_max_hp
 		enemy_hp_label.text = str(enemy_current_hp) + " / " + str(enemy_max_hp)
 
 func increase_bet():
@@ -286,7 +286,7 @@ func enemy_attack():
 		
 	update_hp_display()
 	play_character_damage_effect(player_sprite)
-	play_floating_text(player_sprite, "ATTACK!!!")
+	play_floating_text(player_sprite, "-" + str(damage))
 	play_sound("attack")
 	
 	if player_current_hp == 0:
@@ -298,7 +298,7 @@ func player_attack(damage: int):
 		
 	update_hp_display()
 	play_character_damage_effect(enemy_sprite)
-	play_floating_text(enemy_sprite, "ATTACK!!!")
+	play_floating_text(enemy_sprite, "-" + str(damage))
 	play_sound("attack")
 	
 	gain_exp(damage)
