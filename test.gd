@@ -89,10 +89,10 @@ func setup_audio():
 	
 	var sound_volumes = {
 		"spin": - 15.0,
-		"win": 0.0,
-		"attack": - 5.0,
-		"heal": 0.0,
-		"level_up": 2.0
+		"win": - 15.0,
+		"attack": - 15.0,
+		"heal": - 15.0,
+		"level_up": - 15.0
 	}
 	
 	for sound_name in sound_files.keys():
