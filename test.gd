@@ -47,11 +47,11 @@ var is_in_battle = false
 var just_encountered = false
 
 var enemies_data = [
-	{"name": "哥布林 (Goblin)", "texture": preload("res://assets/goblin.png"), "hp": 150, "str": 10, "weight": 40},
-	{"name": "幽靈 (Ghost)", "texture": preload("res://assets/ghost.png"), "hp": 200, "str": 15, "weight": 25},
-	{"name": "半獸人 (Orc)", "texture": preload("res://assets/orc.png"), "hp": 350, "str": 20, "weight": 20},
-	{"name": "石巨人 (Golem)", "texture": preload("res://assets/golem.png"), "hp": 800, "str": 25, "weight": 10},
-	{"name": "惡龍 (Dragon)", "texture": preload("res://assets/dragon.png"), "hp": 600, "str": 50, "weight": 5}
+	{"name": "哥布林 (Goblin)", "texture": preload("res://assets/goblin.png"), "max_hp": 150, "str": 10, "weight": 40},
+	{"name": "幽靈 (Ghost)", "texture": preload("res://assets/ghost.png"), "max_hp": 200, "str": 15, "weight": 25},
+	{"name": "半獸人 (Orc)", "texture": preload("res://assets/orc.png"), "max_hp": 350, "str": 20, "weight": 20},
+	{"name": "石巨人 (Golem)", "texture": preload("res://assets/golem.png"), "max_hp": 800, "str": 25, "weight": 10},
+	{"name": "惡龍 (Dragon)", "texture": preload("res://assets/dragon.png"), "max_hp": 600, "str": 50, "weight": 5}
 ]
 
 var symbols_data = {
@@ -68,7 +68,8 @@ var is_encountering_transition = false # 新增：正在處理敵人遭遇動畫
 var icon_height = 104
 var current_board = []
 var current_enemy_name = ""
-var current_enemy_str = 10 # 新增：當前敵人的基礎攻擊力因子
+var current_enemy_str = 10
+var current_enemy_exp_reward = 0 # 新增：當前敵人的經驗值獎勵
 
 func _ready() -> void:
 	randomize()
@@ -316,9 +317,10 @@ func start_encounter():
 	enemy_hp_bar.modulate.a = 1.0
 	
 	enemy_sprite.texture = selected_enemy["texture"]
-	enemy_max_hp = selected_enemy["hp"]
+	enemy_max_hp = selected_enemy["max_hp"]
 	enemy_current_hp = enemy_max_hp
-	current_enemy_str = selected_enemy["str"] # 儲存當前敵人的攻擊力
+	current_enemy_str = selected_enemy["str"] 
+	current_enemy_exp_reward = selected_enemy["max_hp"] # 使用 HP 作為經驗值獎勵
 	
 	enemy_hp_bar.max_value = enemy_max_hp
 	enemy_hp_bar.value = enemy_current_hp
@@ -367,12 +369,15 @@ func player_attack(base_damage: int):
 	play_floating_text(enemy_sprite, "-" + str(damage))
 	play_sound("attack")
 	
-	gain_exp(damage)
-	
 	if enemy_current_hp == 0:
 		is_in_battle = false
-		play_character_death_effect(enemy_sprite, enemy_hp_bar)
+		var death_tween = play_character_death_effect(enemy_sprite, enemy_hp_bar)
 		play_sound("defeat")
+		# ⏳ 等待敵人死亡動畫 (1.5s) 結束後再多等 0.5s 才拿 EXP
+		if death_tween:
+			await death_tween.finished
+		await get_tree().create_timer(0.5).timeout
+		gain_exp(current_enemy_exp_reward) 
 
 func gain_exp(amount: int):
 	player_current_exp += amount
@@ -494,7 +499,7 @@ func play_character_damage_effect(sprite: TextureRect):
 	tween.tween_property(sprite, "modulate", Color(1, 0, 0, 1), 0.1)
 	tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
 
-func play_character_death_effect(sprite: TextureRect, hp_bar: ProgressBar):
+func play_character_death_effect(sprite: TextureRect, hp_bar: ProgressBar) -> Tween:
 	var tween = create_tween().set_parallel(true)
 	
 	if sprite == player_sprite:
@@ -506,6 +511,8 @@ func play_character_death_effect(sprite: TextureRect, hp_bar: ProgressBar):
 		
 	if sprite: tween.tween_property(sprite, "modulate:a", 0.0, 1.5)
 	if hp_bar: tween.tween_property(hp_bar, "modulate:a", 0.0, 1.5)
+	
+	return tween
 
 func play_heal_effect(sprite: TextureRect):
 	if not sprite: return
