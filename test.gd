@@ -376,7 +376,7 @@ func player_attack(base_damage: int):
 		if death_tween:
 			await death_tween.finished
 		await get_tree().create_timer(0.5).timeout
-		gain_exp(current_enemy_exp_reward) 
+		await gain_exp(current_enemy_exp_reward) 
 
 func gain_exp(amount: int):
 	player_current_exp += amount
@@ -395,7 +395,7 @@ func gain_exp(amount: int):
 
 	update_ui()
 	if leveled_up:
-		play_level_up_effect()
+		await play_level_up_effect()
 
 func check_win():
 	var total_win = 0
@@ -450,7 +450,7 @@ func check_win():
 	if is_in_battle and not just_encountered:
 		# 傷害 = 主角力量 + 贏得的金幣
 		var total_damage = player_str + total_win
-		player_attack(total_damage)
+		await player_attack(total_damage)
 		# ⏳ 等待主角攻擊動作結束
 		await get_tree().create_timer(0.6).timeout
 	
@@ -541,6 +541,10 @@ func play_level_up_effect():
 	tween.tween_property(player_sprite, "scale", Vector2(1.0, 1.0), 0.5).set_delay(0.2).set_trans(Tween.TRANS_BOUNCE)
 	
 	play_sound("level_up")
+	
+	# ⏳ 等待升級音效播放完畢
+	if audio_players.has("level_up"):
+		await audio_players["level_up"].finished
 
 func play_floating_text(target_sprite: TextureRect, text: String):
 	if not target_sprite: return
