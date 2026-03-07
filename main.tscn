@@ -206,9 +206,9 @@ layout_mode = 2
 
 [node name="SpinButton" type="Button" parent="." unique_id=1562554781]
 layout_mode = 0
-offset_left = 506.0
+offset_left = 513.0
 offset_top = 498.0
-offset_right = 632.0
+offset_right = 639.0
 offset_bottom = 551.0
 theme_override_font_sizes/font_size = 32
 theme_override_styles/hover = SubResource("StyleBoxFlat_hover_spin")
@@ -237,9 +237,9 @@ text = "Bet: 10"
 
 [node name="PlusButton" type="Button" parent="." unique_id=1753599340]
 layout_mode = 0
-offset_left = 659.0
+offset_left = 663.0
 offset_top = 498.0
-offset_right = 711.0
+offset_right = 713.0
 offset_bottom = 551.0
 theme_override_font_sizes/font_size = 32
 theme_override_styles/hover = SubResource("StyleBoxFlat_hover_plus")
@@ -249,9 +249,9 @@ text = "+"
 
 [node name="MinusButton" type="Button" parent="." unique_id=377737432]
 layout_mode = 0
-offset_left = 435.0
+offset_left = 439.0
 offset_top = 498.0
-offset_right = 481.0
+offset_right = 489.0
 offset_bottom = 551.0
 theme_override_font_sizes/font_size = 32
 theme_override_styles/hover = SubResource("StyleBoxFlat_hover_minus")
