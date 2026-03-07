@@ -415,6 +415,7 @@ func play_win_effects(nodes: Array):
 		for i in range(3):
 			flash_tween.tween_property(icon_node, "modulate", Color(2, 0, 0, 1), 0.06)
 			flash_tween.tween_property(icon_node, "modulate", Color.WHITE, 0.06)
+		flash_tween.tween_property(icon_node, "modulate", Color(0.8, 0.8, 0.8), 0.06)
 
 func play_character_damage_effect(sprite: TextureRect):
 	if not sprite: return
