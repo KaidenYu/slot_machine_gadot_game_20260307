@@ -175,6 +175,24 @@ bg_color = Color(0.53333336, 0.49411765, 0.47058824, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h2yge"]
 bg_color = Color(5.053729e-07, 0.6096245, 0.14396253, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_potion_frame"]
+bg_color = Color(0.2, 0.2, 0.2, 0.7)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.6, 0.6, 0.6, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+expand_margin_left = 4.0
+expand_margin_top = 4.0
+expand_margin_right = 4.0
+expand_margin_bottom = 4.0
+shadow_color = Color(0, 0, 0, 0.3)
+shadow_size = 2
+
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_0xm2m"]
 load_path = "res://.godot/imported/dragon.png-07e3423f5a8614e88193baf4eb1ce12b.ctex"
 
@@ -381,10 +399,14 @@ stretch_mode = 5
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Player" unique_id=163788794]
 layout_mode = 2
-alignment = 1
 
-[node name="HealButton" type="TextureButton" parent="Player/HBoxContainer" unique_id=1439823717]
-custom_minimum_size = Vector2(40, 40)
+[node name="PotionFrame" type="PanelContainer" parent="Player/HBoxContainer" unique_id=1174337398]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_potion_frame")
+
+[node name="HealButton" type="TextureButton" parent="Player/HBoxContainer/PotionFrame" unique_id=1439823717]
+custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
 size_flags_horizontal = 4
 texture_normal = ExtResource("6_potion")

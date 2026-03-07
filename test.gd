@@ -20,7 +20,7 @@ extends Control
 @onready var enemy_node = $Enemy
 @onready var player_hp_label = $Player/HealthBar/HPLabel
 @onready var enemy_hp_label = $Enemy/HealthBar/HPLabel
-@onready var heal_button = $Player/HBoxContainer/HealButton
+@onready var heal_button = $Player/HBoxContainer/PotionFrame/HealButton
 @onready var level_label = $Player/LevelLabel
 @onready var mute_button = $MuteButton
 
@@ -100,8 +100,8 @@ func _ready() -> void:
 		tween.tween_property(heal_button, "scale", Vector2(1.1, 1.1), 0.05)
 	)
 
-	# 由於 TextureButton 現在是 40x40，Pivot 設為 (20, 20)
-	heal_button.pivot_offset = Vector2(20, 20)
+	# 由於 TextureButton 現在是 30x30，Pivot 設為 (15, 15)
+	heal_button.pivot_offset = Vector2(15, 15)
 	mute_button.pressed.connect(toggle_mute)
 	
 	update_ui()
