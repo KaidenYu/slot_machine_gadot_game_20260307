@@ -10,6 +10,7 @@ extends Control
 @onready var bet_panel = $BetPanel
 @onready var plus_button = $PlusButton
 @onready var minus_button = $MinusButton
+@onready var coin_icon = $GoldPanel/HBoxContainer/CoinIcon
 
 # ⚔️ 戰鬥系統 UI 節點
 @onready var player_hp_bar = $Player/HealthBar
@@ -139,6 +140,9 @@ func toggle_mute():
 		mute_button.text = "🔇 Sound OFF"
 	else:
 		mute_button.text = "🔊 Sound ON"
+
+# 🪙 金幣飛行特效資源
+var coin_texture = preload("res://assets/coin_icon.png")
 
 func play_sound(sound_name: String):
 	# 🌟 移除了這裡的 if is_muted: return，讓音效可以照常「無聲播放」
@@ -329,7 +333,7 @@ func start_encounter():
 	enemy_sprite.texture = selected_enemy["texture"]
 	enemy_max_hp = selected_enemy["max_hp"]
 	enemy_current_hp = enemy_max_hp
-	current_enemy_str = selected_enemy["str"] 
+	current_enemy_str = selected_enemy["str"]
 	current_enemy_exp_reward = selected_enemy["max_hp"] # 使用 HP 作為經驗值獎勵
 	
 	enemy_hp_bar.max_value = enemy_max_hp
@@ -387,7 +391,7 @@ func player_attack(base_damage: int):
 		if death_tween:
 			await death_tween.finished
 		await get_tree().create_timer(0.5).timeout
-		await gain_exp(current_enemy_exp_reward) 
+		await gain_exp(current_enemy_exp_reward)
 
 func gain_exp(amount: int):
 	player_current_exp += amount
@@ -456,6 +460,10 @@ func check_win():
 				unique_winning_nodes.append(node)
 		
 		play_win_effects(unique_winning_nodes)
+		
+		# 🪙 觸發金幣噴發特效：從每個中獎格子飛向左上角
+		for node in unique_winning_nodes:
+			play_coin_fly_animation(node.global_position + node.size / 2)
 	
 	# 主角在戰鬥中每一輪都會反擊
 	if is_in_battle and not just_encountered:
@@ -580,10 +588,53 @@ func get_random_symbol() -> String:
 	var total_weight = 0
 	for data in symbols_data.values():
 		total_weight += data["weight"]
+	
+	if total_weight <= 0: return symbols_data.keys()[0]
+	
 	var random_value = randi() % total_weight
 	var current_weight = 0
 	for symbol in symbols_data.keys():
 		current_weight += symbols_data[symbol]["weight"]
 		if random_value < current_weight:
 			return symbol
-	return ""
+	
+	return symbols_data.keys()[0] # Fallback return to ensure all code paths return a value
+
+# 🪙 核心：金幣飛行特效邏輯
+func play_coin_fly_animation(start_pos: Vector2):
+	# 🎯 目的地：獲取準確的視覺中心
+	var target_center = coin_icon.get_global_rect().get_center()
+	var base_size = Vector2(90, 90)
+	var end_scale = 0.22
+	
+	# 每次噴發 5 個代表性金幣
+	for i in range(5):
+		var coin = TextureRect.new()
+		coin.texture = coin_texture
+		coin.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		coin.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		coin.custom_minimum_size = base_size
+		coin.size = base_size
+		coin.pivot_offset = Vector2.ZERO # 👈 關鍵：樞軸設為 0 以避免與 global_position 衝突
+		
+		add_child(coin)
+		# 起始位置：中心對準 start_pos
+		coin.global_position = start_pos - (base_size / 2)
+		
+		var tween = create_tween().set_parallel(true)
+		var duration = 0.4 + randf() * 0.2
+		var delay = i * 0.05
+		
+		# 1. 直接飛向目標中心 (計算縮小後的偏移量)
+		var final_pos = target_center - (base_size * end_scale / 2)
+		tween.tween_property(coin, "global_position", final_pos, duration).set_delay(delay).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		# 2. 飛行過程中縮小
+		tween.tween_property(coin, "scale", Vector2(end_scale, end_scale), duration).set_delay(delay).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		
+		# 當抵達目的地
+		tween.chain().tween_callback(func():
+			coin.queue_free()
+			var pop_tween = create_tween()
+			pop_tween.tween_property(gold_panel, "scale", Vector2(1.1, 1.1), 0.05)
+			pop_tween.tween_property(gold_panel, "scale", Vector2(1.0, 1.0), 0.05)
+		)
