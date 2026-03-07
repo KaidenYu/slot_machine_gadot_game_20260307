@@ -147,7 +147,7 @@ func update_hp_display():
 	player_hp_label.text = str(player_current_hp) + " / " + str(player_max_hp)
 	
 	if enemy_node.visible:
-		enemy_hp_bar.max_value = enemy_current_hp
+		enemy_hp_bar.max_value = enemy_max_hp
 		enemy_hp_bar.value = enemy_current_hp
 		enemy_hp_label.text = str(enemy_current_hp) + " / " + str(enemy_max_hp)
 
