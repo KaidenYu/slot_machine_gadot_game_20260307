@@ -47,11 +47,11 @@ var is_in_battle = false
 var just_encountered = false
 
 var enemies_data = [
-	{"name": "哥布林 (Goblin)", "texture": preload("res://assets/goblin.png"), "hp": 150, "str": 10},
-	{"name": "幽靈 (Ghost)", "texture": preload("res://assets/ghost.png"), "hp": 200, "str": 15},
-	{"name": "半獸人 (Orc)", "texture": preload("res://assets/orc.png"), "hp": 350, "str": 20},
-	{"name": "石巨人 (Golem)", "texture": preload("res://assets/golem.png"), "hp": 800, "str": 25},
-	{"name": "惡龍 (Dragon)", "texture": preload("res://assets/dragon.png"), "hp": 600, "str": 50}
+	{"name": "哥布林 (Goblin)", "texture": preload("res://assets/goblin.png"), "hp": 150, "str": 10, "weight": 40},
+	{"name": "幽靈 (Ghost)", "texture": preload("res://assets/ghost.png"), "hp": 200, "str": 15, "weight": 25},
+	{"name": "半獸人 (Orc)", "texture": preload("res://assets/orc.png"), "hp": 350, "str": 20, "weight": 20},
+	{"name": "石巨人 (Golem)", "texture": preload("res://assets/golem.png"), "hp": 800, "str": 25, "weight": 10},
+	{"name": "惡龍 (Dragon)", "texture": preload("res://assets/dragon.png"), "hp": 600, "str": 50, "weight": 5}
 ]
 
 var symbols_data = {
@@ -290,8 +290,21 @@ func start_encounter():
 	play_sound("encounter")
 	await get_tree().create_timer(0.5).timeout
 	
-	var random_index = randi() % enemies_data.size()
-	var selected_enemy = enemies_data[random_index]
+	# 🎲 權重系統：根據 weight 決定遇到哪個敵人
+	var total_weight = 0
+	for enemy in enemies_data:
+		total_weight += enemy["weight"]
+		
+	var random_val = randi() % total_weight
+	var current_sum = 0
+	var selected_enemy = enemies_data[0] # 預設
+	
+	for enemy in enemies_data:
+		current_sum += enemy["weight"]
+		if random_val < current_sum:
+			selected_enemy = enemy
+			break
+	
 	current_enemy_name = selected_enemy["name"]
 	
 	if enemy_effect_tween and enemy_effect_tween.is_valid():
