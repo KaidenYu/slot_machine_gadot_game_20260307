@@ -147,6 +147,18 @@ custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_0xm2m")
 theme_override_styles/fill = SubResource("StyleBoxFlat_h2yge")
+show_percentage = false
+
+[node name="HPLabel" type="Label" parent="Player/HealthBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "100 / 100"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Sprite" type="TextureRect" parent="Player" unique_id=867032154]
 custom_minimum_size = Vector2(150, 150)
@@ -172,6 +184,18 @@ custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_0xm2m")
 theme_override_styles/fill = SubResource("StyleBoxFlat_h2yge")
+show_percentage = false
+
+[node name="HPLabel" type="Label" parent="Enemy/HealthBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "500 / 500"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Sprite" type="TextureRect" parent="Enemy" unique_id=1687859820]
 custom_minimum_size = Vector2(150, 150)

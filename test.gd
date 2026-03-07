@@ -15,6 +15,8 @@ extends Control
 @onready var player_sprite = $Player/Sprite
 @onready var enemy_sprite = $Enemy/Sprite
 @onready var enemy_node = $Enemy
+@onready var player_hp_label = $Player/HealthBar/HPLabel
+@onready var enemy_hp_label = $Enemy/HealthBar/HPLabel
 @onready var heal_button = $Player/HealButton
 @onready var level_label = $Player/LevelLabel
 @onready var mute_button = $MuteButton
@@ -137,6 +139,17 @@ func update_ui():
 	gold_label.text = "Gold: " + str(current_gold)
 	bet_label.text = "Bet: " + str(current_bet)
 	level_label.text = "Lv: " + str(player_level) + "\nEXP: " + str(player_current_exp) + " / " + str(player_next_level_exp)
+	update_hp_display()
+
+func update_hp_display():
+	player_hp_bar.value = player_current_hp
+	player_hp_bar.max_value = player_max_hp
+	player_hp_label.text = str(player_current_hp) + " / " + str(player_max_hp)
+	
+	if enemy_node.visible:
+		enemy_hp_bar.value = enemy_current_hp
+		enemy_hp_bar.max_value = enemy_max_hp
+		enemy_hp_label.text = str(enemy_current_hp) + " / " + str(enemy_max_hp)
 
 func increase_bet():
 	if is_spinning: return
@@ -163,13 +176,11 @@ func heal_player():
 		player_current_hp = player_max_hp
 		
 	update_ui()
-	player_hp_bar.value = player_current_hp
 	play_heal_effect(player_sprite)
 	play_sound("heal")
 
 func init_battle_system():
-	player_hp_bar.max_value = player_max_hp
-	player_hp_bar.value = player_current_hp
+	update_hp_display()
 
 func setup_reels():
 	for control_node in reel_container.get_children():
@@ -260,6 +271,7 @@ func start_encounter():
 	enemy_hp_bar.value = enemy_current_hp
 	
 	enemy_node.visible = true
+	update_hp_display()
 	
 	enemy_sprite.modulate.a = 0.0
 	enemy_hp_bar.modulate.a = 0.0
@@ -272,7 +284,7 @@ func enemy_attack():
 	player_current_hp -= damage
 	if player_current_hp < 0: player_current_hp = 0
 		
-	player_hp_bar.value = player_current_hp
+	update_hp_display()
 	play_character_damage_effect(player_sprite)
 	play_floating_text(player_sprite, "ATTACK!!!")
 	play_sound("attack")
@@ -284,7 +296,7 @@ func player_attack(damage: int):
 	enemy_current_hp -= damage
 	if enemy_current_hp < 0: enemy_current_hp = 0
 		
-	enemy_hp_bar.value = enemy_current_hp
+	update_hp_display()
 	play_character_damage_effect(enemy_sprite)
 	play_floating_text(enemy_sprite, "ATTACK!!!")
 	play_sound("attack")
@@ -306,8 +318,6 @@ func gain_exp(amount: int):
 		
 		player_max_hp += 20
 		player_current_hp = player_max_hp
-		player_hp_bar.max_value = player_max_hp
-		player_hp_bar.value = player_current_hp
 		
 		leveled_up = true
 
