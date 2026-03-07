@@ -4,8 +4,10 @@ extends Control
 @onready var spin_button = $SpinButton
 
 # 💰 經濟系統 UI 節點
-@onready var gold_label = $GoldLabel
-@onready var bet_label = $BetLabel
+@onready var gold_label = $GoldPanel/HBoxContainer/GoldLabel
+@onready var gold_panel = $GoldPanel
+@onready var bet_label = $BetPanel/HBoxContainer/BetLabel
+@onready var bet_panel = $BetPanel
 @onready var plus_button = $PlusButton
 @onready var minus_button = $MinusButton
 
@@ -150,23 +152,23 @@ func update_ui():
 		var gold_tween = create_tween()
 		gold_tween.tween_method(func(v): 
 			displayed_gold = v
-			gold_label.text = "💰 " + str(int(displayed_gold))
+			gold_label.text = str(int(displayed_gold))
 		, displayed_gold, current_gold, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		
 		# 金幣標籤彈跳 (只在金幣真的變動時)
 		var gold_pop = create_tween()
-		gold_pop.tween_property(gold_label, "scale", Vector2(1.1, 1.1), 0.05)
-		gold_pop.tween_property(gold_label, "scale", Vector2(1.0, 1.0), 0.05)
+		gold_pop.tween_property(gold_panel, "scale", Vector2(1.1, 1.1), 0.05)
+		gold_pop.tween_property(gold_panel, "scale", Vector2(1.0, 1.0), 0.05)
 	else:
-		gold_label.text = "💰 " + str(current_gold)
+		gold_label.text = str(current_gold)
 
 	# ⚔️ 處理下注顯示與動畫
-	bet_label.text = "Bet: " + str(current_bet)
+	bet_label.text = str(current_bet)
 	if current_bet != last_bet:
 		# 下注標籤彈跳 (只在按 +/- 時)
 		var bet_pop = create_tween()
-		bet_pop.tween_property(bet_label, "scale", Vector2(1.2, 1.2), 0.1)
-		bet_pop.tween_property(bet_label, "scale", Vector2(1.0, 1.0), 0.1)
+		bet_pop.tween_property(bet_panel, "scale", Vector2(1.2, 1.2), 0.1)
+		bet_pop.tween_property(bet_panel, "scale", Vector2(1.0, 1.0), 0.1)
 		last_bet = current_bet
 
 	level_label.text = "Lv: " + str(player_level) + "\nEXP: " + str(player_current_exp) + " / " + str(player_next_level_exp)
