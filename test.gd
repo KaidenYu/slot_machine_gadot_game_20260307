@@ -282,7 +282,6 @@ func spin_reels():
 		
 		if i == reels.size() - 1:
 			tween.finished.connect(func():
-				is_spinning = false
 				stop_sound("spin")
 				check_win()
 			)
@@ -463,6 +462,11 @@ func check_win():
 		if is_in_battle and not just_encountered:
 			if enemy_current_hp > 0: # 確保敵人被打死後不會反擊
 				enemy_attack()
+				# ⏳ 等待敵人攻擊動畫結束 (數字漂浮與紅閃約 0.6s)
+				await get_tree().create_timer(0.6).timeout
+	
+	# 🏁 所有結算(中獎、戰鬥、反擊)完成，解鎖 Spin
+	is_spinning = false
 
 func calculate_line_win(symbol: String, count: int) -> int:
 	var base_win = current_bet * symbols_data[symbol]["payout_multiplier"]
