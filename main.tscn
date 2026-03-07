@@ -5,12 +5,48 @@
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1bvp3"]
 bg_color = Color(0.32156864, 0.7254902, 0, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 6
+border_color = Color(1, 1, 1, 0.313726)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.392157)
+shadow_size = 4
+shadow_offset = Vector2(0, 4)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lquwl"]
 bg_color = Color(0.005309207, 0.2019648, 0.69331646, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 6
+border_color = Color(1, 1, 1, 0.313726)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.392157)
+shadow_size = 4
+shadow_offset = Vector2(0, 4)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7mycd"]
 bg_color = Color(0.80125064, 0, 0.011332289, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 6
+border_color = Color(1, 1, 1, 0.313726)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.392157)
+shadow_size = 4
+shadow_offset = Vector2(0, 4)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0xm2m"]
 bg_color = Color(0.53333336, 0.49411765, 0.47058824, 1)
@@ -114,7 +150,7 @@ text = "Bet: 10"
 layout_mode = 0
 offset_left = 659.0
 offset_top = 498.0
-offset_right = 685.0
+offset_right = 711.0
 offset_bottom = 551.0
 theme_override_font_sizes/font_size = 32
 theme_override_styles/normal = SubResource("StyleBoxFlat_lquwl")
@@ -122,7 +158,7 @@ text = "+"
 
 [node name="MinusButton" type="Button" parent="." unique_id=377737432]
 layout_mode = 0
-offset_left = 458.0
+offset_left = 435.0
 offset_top = 498.0
 offset_right = 481.0
 offset_bottom = 551.0
