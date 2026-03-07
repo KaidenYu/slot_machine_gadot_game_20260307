@@ -5,6 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://7mrxe0bmk7ge" path="res://assets/slot_frame.png" id="3_frame"]
 [ext_resource type="Texture2D" uid="uid://cgkgdhes83b34" path="res://assets/coin_icon.png" id="4_coin"]
 [ext_resource type="Texture2D" uid="uid://br81y78ybokuj" path="res://assets/bet_icon.png" id="5_bet_icon"]
+[ext_resource type="Texture2D" uid="uid://ckbasrwmpwj3f" path="res://assets/red_potion.png" id="6_potion"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1bvp3"]
 bg_color = Color(0.32156864, 0.7254902, 0, 1)
@@ -173,9 +174,6 @@ bg_color = Color(0.53333336, 0.49411765, 0.47058824, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h2yge"]
 bg_color = Color(5.053729e-07, 0.6096245, 0.14396253, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_272bh"]
-bg_color = Color(0.78044915, 0.5490248, 0.192253, 1)
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_0xm2m"]
 load_path = "res://.godot/imported/dragon.png-07e3423f5a8614e88193baf4eb1ce12b.ctex"
@@ -381,10 +379,17 @@ texture = ExtResource("2_0xm2m")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="HealButton" type="Button" parent="Player" unique_id=308496225]
+[node name="HBoxContainer" type="HBoxContainer" parent="Player" unique_id=163788794]
 layout_mode = 2
-theme_override_styles/normal = SubResource("StyleBoxFlat_272bh")
-text = "Heal (-50G / +10)"
+alignment = 1
+
+[node name="HealButton" type="TextureButton" parent="Player/HBoxContainer" unique_id=1439823717]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+texture_normal = ExtResource("6_potion")
+ignore_texture_size = true
+stretch_mode = 5
 
 [node name="Enemy" type="VBoxContainer" parent="." unique_id=1445440739]
 layout_mode = 0

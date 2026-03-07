@@ -20,7 +20,7 @@ extends Control
 @onready var enemy_node = $Enemy
 @onready var player_hp_label = $Player/HealthBar/HPLabel
 @onready var enemy_hp_label = $Enemy/HealthBar/HPLabel
-@onready var heal_button = $Player/HealButton
+@onready var heal_button = $Player/HBoxContainer/HealButton
 @onready var level_label = $Player/LevelLabel
 @onready var mute_button = $MuteButton
 
@@ -81,6 +81,27 @@ func _ready() -> void:
 	plus_button.pressed.connect(increase_bet)
 	minus_button.pressed.connect(decrease_bet)
 	heal_button.pressed.connect(heal_player)
+	heal_button.mouse_entered.connect(func():
+		var tween = create_tween()
+		tween.tween_property(heal_button, "scale", Vector2(1.1, 1.1), 0.1)
+	)
+	heal_button.mouse_exited.connect(func():
+		var tween = create_tween()
+		tween.tween_property(heal_button, "scale", Vector2(1.0, 1.0), 0.1)
+	)
+	heal_button.button_down.connect(func():
+		if player_current_hp >= player_max_hp or current_gold < 50: return
+		var tween = create_tween()
+		tween.tween_property(heal_button, "scale", Vector2(0.9, 0.9), 0.05)
+	)
+	heal_button.button_up.connect(func():
+		var tween = create_tween()
+		# 放開按鈕時必定回彈至 1.1 (因為滑鼠還在上面)
+		tween.tween_property(heal_button, "scale", Vector2(1.1, 1.1), 0.05)
+	)
+
+	# 由於 TextureButton 現在是 40x40，Pivot 設為 (20, 20)
+	heal_button.pivot_offset = Vector2(20, 20)
 	mute_button.pressed.connect(toggle_mute)
 	
 	update_ui()
