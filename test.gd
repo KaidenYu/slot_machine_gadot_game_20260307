@@ -190,9 +190,20 @@ func update_hp_display():
 
 func increase_bet():
 	if is_spinning: return
+	var max_bet_allowed = player_level * 10
+	
+	if current_bet >= max_bet_allowed:
+		# 💡 達到上限，顯示黃色提示文本
+		play_floating_text(plus_button, "MAX!", Color(1, 0.8, 0))
+		return
+	
 	current_bet += 10
+	if current_bet > max_bet_allowed:
+		current_bet = max_bet_allowed
+			
 	if current_bet > current_gold:
-		current_bet = current_gold
+		current_bet = max(10, int(current_gold / 10) * 10)
+		
 	update_ui()
 
 func decrease_bet():
@@ -546,19 +557,19 @@ func play_level_up_effect():
 	if audio_players.has("level_up"):
 		await audio_players["level_up"].finished
 
-func play_floating_text(target_sprite: TextureRect, text: String):
-	if not target_sprite: return
+func play_floating_text(target: Control, text: String, color: Color = Color(1, 0, 0, 1)):
+	if not target: return
 	
 	var label = Label.new()
 	label.text = text
 	
-	label.add_theme_color_override("font_color", Color(1, 0, 0, 1))
+	label.add_theme_color_override("font_color", color)
 	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
 	label.add_theme_constant_override("outline_size", 4)
 	label.add_theme_font_size_override("font_size", 28)
 	
-	target_sprite.add_child(label)
-	label.position = Vector2(target_sprite.size.x / 2 - 60, 20)
+	target.add_child(label)
+	label.position = Vector2(target.size.x / 2 - 30, -20)
 	
 	var tween = create_tween().set_parallel(true)
 	tween.tween_property(label, "position:y", label.position.y - 80, 1.0).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
