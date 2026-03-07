@@ -32,7 +32,7 @@ var is_muted = false
 var current_gold = 1000
 var displayed_gold = 1000 # 用於動畫顯示的金幣數
 var current_bet = 10
-var last_bet = 10         # 用於偵測下注變動
+var last_bet = 10 # 用於偵測下注變動
 
 var player_level = 1
 var player_current_exp = 0
@@ -46,11 +46,11 @@ var is_in_battle = false
 var just_encountered = false
 
 var enemies_data = [
-	{"name": "幽靈 (Ghost)", "texture": preload("res://assets/ghost.png"), "hp": 200},
-	{"name": "哥布林 (Goblin)", "texture": preload("res://assets/goblin.png"), "hp": 150},
-	{"name": "石巨人 (Golem)", "texture": preload("res://assets/golem.png"), "hp": 800},
-	{"name": "半獸人 (Orc)", "texture": preload("res://assets/orc.png"), "hp": 350},
-	{"name": "惡龍 (Dragon)", "texture": preload("res://assets/dragon.png"), "hp": 600}
+	{"name": "哥布林 (Goblin)", "texture": preload("res://assets/goblin.png"), "hp": 150, "str": 10},
+	{"name": "幽靈 (Ghost)", "texture": preload("res://assets/ghost.png"), "hp": 200, "str": 15},
+	{"name": "半獸人 (Orc)", "texture": preload("res://assets/orc.png"), "hp": 350, "str": 20},
+	{"name": "石巨人 (Golem)", "texture": preload("res://assets/golem.png"), "hp": 800, "str": 25},
+	{"name": "惡龍 (Dragon)", "texture": preload("res://assets/dragon.png"), "hp": 600, "str": 50}
 ]
 
 var symbols_data = {
@@ -66,6 +66,7 @@ var is_spinning = false
 var icon_height = 104
 var current_board = []
 var current_enemy_name = ""
+var current_enemy_str = 10 # 新增：當前敵人的基礎攻擊力因子
 
 func _ready() -> void:
 	randomize()
@@ -150,7 +151,7 @@ func update_ui():
 	if int(displayed_gold) != current_gold:
 		# 金幣滾動動畫
 		var gold_tween = create_tween()
-		gold_tween.tween_method(func(v): 
+		gold_tween.tween_method(func(v):
 			displayed_gold = v
 			gold_label.text = str(int(displayed_gold))
 		, displayed_gold, current_gold, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
@@ -301,6 +302,7 @@ func start_encounter():
 	enemy_sprite.texture = selected_enemy["texture"]
 	enemy_max_hp = selected_enemy["hp"]
 	enemy_current_hp = enemy_max_hp
+	current_enemy_str = selected_enemy["str"] # 儲存當前敵人的攻擊力
 	
 	enemy_hp_bar.max_value = enemy_max_hp
 	enemy_hp_bar.value = enemy_current_hp
@@ -315,7 +317,11 @@ func start_encounter():
 	enemy_effect_tween.tween_property(enemy_hp_bar, "modulate:a", 1.0, 0.2)
 
 func enemy_attack():
-	var damage = randi_range(10, 20)
+	# 🍖 根據當前敵人的 STR 浮動攻擊力 (±20% 隨機性)
+	var min_dmg = int(current_enemy_str * 0.8)
+	var max_dmg = int(current_enemy_str * 1.2)
+	var damage = randi_range(min_dmg, max_dmg)
+	
 	player_current_hp -= damage
 	if player_current_hp < 0: player_current_hp = 0
 		
@@ -420,8 +426,7 @@ func check_win():
 	else:
 		if is_in_battle and not just_encountered:
 			if enemy_current_hp > 0:
-				if randf() <= 0.30:
-					enemy_attack()
+				enemy_attack()
 
 func calculate_line_win(symbol: String, count: int) -> int:
 	var base_win = current_bet * symbols_data[symbol]["payout_multiplier"]
