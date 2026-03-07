@@ -28,7 +28,9 @@ var audio_players = {}
 var is_muted = false
 
 var current_gold = 1000
+var displayed_gold = 1000 # 用於動畫顯示的金幣數
 var current_bet = 10
+var last_bet = 10         # 用於偵測下注變動
 
 var player_level = 1
 var player_current_exp = 0
@@ -142,8 +144,31 @@ func stop_sound(sound_name: String):
 		audio_players[sound_name].stop()
 
 func update_ui():
-	gold_label.text = "Gold: " + str(current_gold)
+	# 🏆 處理金幣顯示與動畫
+	if int(displayed_gold) != current_gold:
+		# 金幣滾動動畫
+		var gold_tween = create_tween()
+		gold_tween.tween_method(func(v): 
+			displayed_gold = v
+			gold_label.text = "💰 " + str(int(displayed_gold))
+		, displayed_gold, current_gold, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		
+		# 金幣標籤彈跳 (只在金幣真的變動時)
+		var gold_pop = create_tween()
+		gold_pop.tween_property(gold_label, "scale", Vector2(1.1, 1.1), 0.05)
+		gold_pop.tween_property(gold_label, "scale", Vector2(1.0, 1.0), 0.05)
+	else:
+		gold_label.text = "💰 " + str(current_gold)
+
+	# ⚔️ 處理下注顯示與動畫
 	bet_label.text = "Bet: " + str(current_bet)
+	if current_bet != last_bet:
+		# 下注標籤彈跳 (只在按 +/- 時)
+		var bet_pop = create_tween()
+		bet_pop.tween_property(bet_label, "scale", Vector2(1.2, 1.2), 0.1)
+		bet_pop.tween_property(bet_label, "scale", Vector2(1.0, 1.0), 0.1)
+		last_bet = current_bet
+
 	level_label.text = "Lv: " + str(player_level) + "\nEXP: " + str(player_current_exp) + " / " + str(player_next_level_exp)
 	update_hp_display()
 

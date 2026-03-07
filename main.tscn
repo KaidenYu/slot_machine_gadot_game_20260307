@@ -145,6 +145,36 @@ bg_color = Color(5.053729e-07, 0.6096245, 0.14396253, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_272bh"]
 bg_color = Color(0.78044915, 0.5490248, 0.192253, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gold_panel"]
+bg_color = Color(0.12549, 0.12549, 0.12549, 0.784314)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 4
+border_color = Color(0.87451, 0.705882, 0.156863, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.5)
+shadow_size = 4
+shadow_offset = Vector2(2, 2)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bet_panel"]
+bg_color = Color(0.12549, 0.12549, 0.12549, 0.784314)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 4
+border_color = Color(0.8, 0.1, 0.1, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.5)
+shadow_size = 4
+shadow_offset = Vector2(-2, 2)
+
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_0xm2m"]
 load_path = "res://.godot/imported/dragon.png-07e3423f5a8614e88193baf4eb1ce12b.ctex"
 
@@ -237,22 +267,41 @@ text = "SPIN"
 
 [node name="GoldLabel" type="Label" parent="." unique_id=1863285379]
 layout_mode = 0
-offset_left = 55.0
-offset_top = 27.0
-offset_right = 95.0
-offset_bottom = 50.0
-theme_override_colors/font_color = Color(0.6326553, 0.61405337, 0.09042486, 1)
+offset_left = 26.0
+offset_top = 23.0
+offset_right = 239.0
+offset_bottom = 75.0
+pivot_offset = Vector2(100, 25)
+theme_override_colors/font_color = Color(1, 0.843137, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.607843)
+theme_override_constants/outline_size = 6
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 3
 theme_override_font_sizes/font_size = 32
-text = "Gold: 1000"
+theme_override_styles/normal = SubResource("StyleBoxFlat_gold_panel")
+text = "💰 1000"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="BetLabel" type="Label" parent="." unique_id=1391487408]
 layout_mode = 0
-offset_left = 1003.0
-offset_top = 27.0
-offset_right = 1109.0
-offset_bottom = 72.0
+offset_left = 948.0
+offset_top = 23.0
+offset_right = 1125.0
+offset_bottom = 75.0
+pivot_offset = Vector2(90, 25)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.607843)
+theme_override_constants/outline_size = 6
+theme_override_constants/shadow_offset_x = -2
+theme_override_constants/shadow_offset_y = 3
 theme_override_font_sizes/font_size = 32
+theme_override_styles/normal = SubResource("StyleBoxFlat_bet_panel")
 text = "Bet: 10"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="PlusButton" type="Button" parent="." unique_id=1753599340]
 layout_mode = 0
