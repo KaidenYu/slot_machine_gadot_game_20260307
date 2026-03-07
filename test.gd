@@ -438,9 +438,11 @@ func check_win():
 	
 	# 主角在戰鬥中每一輪都會反擊
 	if is_in_battle and not just_encountered:
-		# 傷害 = 主角力量 + 贏得的金幣 (讓轉到大獎時依然有爆擊感)
+		# 傷害 = 主角力量 + 贏得的金幣
 		var total_damage = player_str + total_win
 		player_attack(total_damage)
+		# ⏳ 等待主角攻擊動作結束
+		await get_tree().create_timer(0.6).timeout
 	
 	if not was_in_battle:
 		if randf() <= 0.25:
@@ -448,7 +450,7 @@ func check_win():
 			just_encountered = true
 	else:
 		if is_in_battle and not just_encountered:
-			if enemy_current_hp > 0:
+			if enemy_current_hp > 0: # 確保敵人被打死後不會反擊
 				enemy_attack()
 
 func calculate_line_win(symbol: String, count: int) -> int:
