@@ -84,7 +84,8 @@ func setup_audio():
 		"win": "res://assets/win.wav",
 		"attack": "res://assets/attack.wav",
 		"heal": "res://assets/heal.wav",
-		"level_up": "res://assets/levelup.wav"
+		"level_up": "res://assets/levelup.wav",
+		"encounter": "res://assets/encounter.wav"
 	}
 	
 	var sound_volumes = {
@@ -92,7 +93,8 @@ func setup_audio():
 		"win": - 15.0,
 		"attack": - 15.0,
 		"heal": - 15.0,
-		"level_up": - 15.0
+		"level_up": - 15.0,
+		"encounter": - 10.0
 	}
 	
 	for sound_name in sound_files.keys():
@@ -237,6 +239,8 @@ func spin_reels():
 
 func start_encounter():
 	is_in_battle = true
+	play_sound("encounter")
+	await get_tree().create_timer(0.5).timeout
 	
 	var random_index = randi() % enemies_data.size()
 	var selected_enemy = enemies_data[random_index]
