@@ -64,6 +64,7 @@ var symbols_data = {
 
 var reels = []
 var is_spinning = false
+var is_encountering_transition = false # 新增：正在處理敵人遭遇動畫的標記
 var icon_height = 104
 var current_board = []
 var current_enemy_name = ""
@@ -241,7 +242,7 @@ func _input(event: InputEvent) -> void:
 		spin_reels()
 
 func spin_reels():
-	if is_spinning or player_current_hp <= 0: return
+	if is_spinning or is_encountering_transition or player_current_hp <= 0: return
 	if current_gold < current_bet: return
 		
 	is_spinning = true
@@ -286,6 +287,7 @@ func spin_reels():
 			)
 
 func start_encounter():
+	is_encountering_transition = true
 	is_in_battle = true
 	play_sound("encounter")
 	await get_tree().create_timer(0.5).timeout
@@ -327,8 +329,12 @@ func start_encounter():
 	enemy_sprite.modulate.a = 0.0
 	enemy_hp_bar.modulate.a = 0.0
 	enemy_effect_tween = create_tween().set_parallel(true)
-	enemy_effect_tween.tween_property(enemy_sprite, "modulate:a", 1.0, 0.2)
-	enemy_effect_tween.tween_property(enemy_hp_bar, "modulate:a", 1.0, 0.2)
+	enemy_effect_tween.tween_property(enemy_sprite, "modulate:a", 1.0, 1.5)
+	enemy_effect_tween.tween_property(enemy_hp_bar, "modulate:a", 1.0, 1.5)
+	
+	# ⏳ 等待敵人出現動畫結束後，才允許再次按 Spin
+	await enemy_effect_tween.finished
+	is_encountering_transition = false
 
 func enemy_attack():
 	# 🍖 根據當前敵人的 STR 浮動攻擊力 (±20% 隨機性)
