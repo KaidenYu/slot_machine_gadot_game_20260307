@@ -227,7 +227,7 @@ func increase_bet():
 		current_bet = max_bet_allowed
 			
 	if current_bet > current_gold:
-		current_bet = max(10, int(current_gold / 10) * 10)
+		current_bet = max(10, int(floor(current_gold / 10.0)) * 10)
 		
 	update_ui()
 
