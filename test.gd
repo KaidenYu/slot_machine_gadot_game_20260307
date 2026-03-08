@@ -55,6 +55,11 @@ var enemies_data = [
 	{"name": "惡龍 (Dragon)", "texture": preload("res://assets/dragon.png"), "max_hp": 600, "str": 50, "weight": 5}
 ]
 
+var player_textures = {
+	"low": preload("res://assets/player1.png"),
+	"high": preload("res://assets/player2.png")
+}
+
 var symbols_data = {
 	"Cherry": {"weight": 40, "texture": preload("res://assets/cherry.png"), "payout_multiplier": 2},
 	"Lemon": {"weight": 30, "texture": preload("res://assets/lemon.png"), "payout_multiplier": 3},
@@ -113,6 +118,13 @@ func _ready() -> void:
 	
 	enemy_node.visible = false
 	is_in_battle = false
+	update_player_appearance()
+
+func update_player_appearance():
+	if player_level > 5:
+		player_sprite.texture = player_textures["high"]
+	else:
+		player_sprite.texture = player_textures["low"]
 
 func setup_audio():
 	var sound_files = {
@@ -433,6 +445,7 @@ func gain_exp(amount: int):
 
 	update_ui()
 	if leveled_up:
+		update_player_appearance()
 		await play_level_up_effect()
 
 func check_win():
