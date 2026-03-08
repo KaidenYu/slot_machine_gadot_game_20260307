@@ -1,5 +1,8 @@
 extends Control
 
+const SaveLoad = preload("res://save_load.gd")
+
+
 @onready var reel_container = $ReelContainer
 @onready var spin_button = $SpinButton
 
@@ -112,6 +115,9 @@ func _ready() -> void:
 	update_ui()
 	init_battle_system()
 	
+	# 🌟 自動讀取存檔
+	load_game_data()
+	
 	# 🌟 強行設定縮放中心點為圖片中心，避免被 Container 重置
 	player_sprite.pivot_offset = Vector2(75, 75)
 	enemy_sprite.pivot_offset = Vector2(75, 75)
@@ -119,6 +125,60 @@ func _ready() -> void:
 	enemy_node.visible = false
 	is_in_battle = false
 	update_player_appearance()
+
+	# 🗑️ 動態產生「清除存檔」按鈕
+	create_reset_button()
+
+func create_reset_button():
+	var reset_btn = Button.new()
+	reset_btn.name = "ResetButton"
+	reset_btn.text = "Reset Game"
+	
+	# 設定位置與大小：使其與 MuteButton 屬性一致
+	reset_btn.custom_minimum_size = Vector2(113, 31)
+	add_child(reset_btn)
+	reset_btn.position = Vector2(1026, 573)
+	
+	# 建立確認視窗
+	var confirm_dialog = ConfirmationDialog.new()
+	confirm_dialog.title = "DANGER: RESET GAME"
+	confirm_dialog.dialog_text = "\nAre you sure you want to PERMANENTLY reset the game?\nThis will clear ALL your progress and gold."
+	confirm_dialog.ok_button_text = "YES, RESET EVERYTHING"
+	confirm_dialog.cancel_button_text = "No, Keep Playing"
+	confirm_dialog.min_size = Vector2(400, 150) # 稍微加大視窗
+	add_child(confirm_dialog)
+	
+	# 🌟 顯眼客製化：修改內部節點樣式
+	var dialog_label = confirm_dialog.get_label()
+	dialog_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER # 文字置中
+	dialog_label.add_theme_color_override("font_color", Color(1, 0.8, 0.2)) # 警示黃色
+	dialog_label.add_theme_font_size_override("font_size", 16)
+	
+	var ok_btn = confirm_dialog.get_ok_button()
+	ok_btn.add_theme_color_override("font_color", Color(1, 0.3, 0.3))
+	ok_btn.add_theme_color_override("font_hover_color", Color(1, 0.5, 0.5)) # 稍微亮一點的紅
+	ok_btn.add_theme_color_override("font_focus_color", Color(1, 0.5, 0.5))
+	ok_btn.add_theme_color_override("font_pressed_color", Color(0.8, 0, 0))
+	
+	var cancel_btn = confirm_dialog.get_cancel_button()
+	cancel_btn.add_theme_color_override("font_color", Color(0.4, 1.0, 0.4))
+	cancel_btn.add_theme_color_override("font_hover_color", Color(0.6, 1.0, 0.6)) # 稍微亮一點的綠
+	cancel_btn.add_theme_color_override("font_focus_color", Color(0.6, 1.0, 0.6))
+	cancel_btn.add_theme_color_override("font_pressed_color", Color(0.2, 0.8, 0.2))
+	
+	# 點擊確認後的邏輯
+	confirm_dialog.confirmed.connect(func():
+		print("☢️ 確認重置遊戲...")
+		SaveLoad.delete_save()
+		get_tree().reload_current_scene()
+	)
+	
+	# 按下按鈕時顯示視窗
+	reset_btn.pressed.connect(func():
+		confirm_dialog.popup_centered()
+		# 🌟 預設焦點在「BACK TO SAFETY」綠色按鈕上
+		cancel_btn.grab_focus()
+	)
 
 func update_player_appearance():
 	if player_level > 5:
@@ -263,6 +323,7 @@ func heal_player():
 	update_ui()
 	play_heal_effect(player_sprite)
 	play_sound("heal")
+	save_game_data() # 存檔：記錄回血後的狀態與金錢
 
 func init_battle_system():
 	update_hp_display()
@@ -297,6 +358,7 @@ func spin_reels():
 	is_spinning = true
 	current_gold -= current_bet
 	update_ui()
+	save_game_data() # 存檔：扣錢後立即存檔，防止刷新大法
 	just_encountered = false
 	
 	play_sound("spin")
@@ -520,8 +582,9 @@ func check_win():
 				# ⏳ 等待敵人攻擊動畫結束 (數字漂浮與紅閃約 0.6s)
 				await get_tree().create_timer(0.6).timeout
 	
-	# 🏁 所有結算(中獎、戰鬥、反擊)完成，解鎖 Spin
+	# 🏁 所有結算(中獎、戰鬥、反擊)完成，解鎖 Spin 並存檔
 	is_spinning = false
+	save_game_data() # 存檔：完成一輪後的最終結果
 
 func calculate_line_win(symbol: String, count: int) -> int:
 	var base_win = current_bet * symbols_data[symbol]["payout_multiplier"]
@@ -706,3 +769,34 @@ func play_coin_fly_animation(start_pos: Vector2):
 			pop_tween.tween_property(gold_panel, "scale", Vector2(1.1, 1.1), 0.05)
 			pop_tween.tween_property(gold_panel, "scale", Vector2(1.0, 1.0), 0.05)
 		)
+
+# 💾 存檔資料整合
+func save_game_data():
+	var data = {
+		"gold": current_gold,
+		"level": player_level,
+		"exp": player_current_exp,
+		"next_level_exp": player_next_level_exp,
+		"max_hp": player_max_hp,
+		"hp": player_current_hp,
+		"str": player_str
+	}
+	SaveLoad.save_game(data)
+
+# 💾 讀取資料並更新變數
+func load_game_data():
+	var data = SaveLoad.load_game()
+	if data.is_empty(): return
+	
+	current_gold = data.get("gold", 1000)
+	displayed_gold = current_gold # 讓顯示數字同步起始
+	player_level = data.get("level", 1)
+	player_current_exp = data.get("exp", 0)
+	player_next_level_exp = data.get("next_level_exp", 100)
+	player_max_hp = data.get("max_hp", 100)
+	player_current_hp = data.get("hp", 100)
+	player_str = data.get("str", 15)
+	
+	update_ui()
+	update_player_appearance()
+	print("存檔載入完成！目前的金幣：", current_gold)
