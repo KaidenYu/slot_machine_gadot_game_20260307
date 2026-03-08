@@ -383,6 +383,7 @@ func enemy_attack():
 	if player_current_hp < 0: player_current_hp = 0
 		
 	update_hp_display()
+	play_attack_movement_effect(enemy_sprite, -30) # 敵人往左衝
 	play_character_damage_effect(player_sprite)
 	play_floating_text(player_sprite, "-" + str(damage))
 	play_sound("attack")
@@ -400,6 +401,7 @@ func player_attack(base_damage: int):
 	if enemy_current_hp < 0: enemy_current_hp = 0
 		
 	update_hp_display()
+	play_attack_movement_effect(player_sprite, 30) # 主角往右衝
 	play_character_damage_effect(enemy_sprite)
 	play_floating_text(enemy_sprite, "-" + str(damage))
 	play_sound("attack")
@@ -531,17 +533,34 @@ func play_win_effects(nodes: Array):
 
 func play_character_damage_effect(sprite: TextureRect):
 	if not sprite: return
-	var tween = create_tween()
+	var original_pos = sprite.position
 	
+	# 🔴 閃紅光 (獨立的 Tween)
+	var color_tween = create_tween()
+	color_tween.tween_property(sprite, "modulate", Color(2, 0, 0, 1), 0.1)
+	color_tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
+	
+	# 🫨 抖動 (獨立的序列式 Tween)
+	var move_tween = create_tween()
 	if sprite == player_sprite:
 		if player_effect_tween and player_effect_tween.is_valid(): player_effect_tween.kill()
-		player_effect_tween = tween
+		player_effect_tween = move_tween
 	else:
 		if enemy_effect_tween and enemy_effect_tween.is_valid(): enemy_effect_tween.kill()
-		enemy_effect_tween = tween
-		
-	tween.tween_property(sprite, "modulate", Color(1, 0, 0, 1), 0.1)
-	tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
+		enemy_effect_tween = move_tween
+	
+	var shake_duration = 0.04
+	var offset = 3
+	
+	# 加入一點點延遲，讓「被打」的感覺在對方衝刺過來時發生
+	move_tween.tween_interval(0.05)
+	
+	for i in range(5):
+		move_tween.tween_property(sprite, "position:x", original_pos.x - offset, shake_duration)
+		move_tween.tween_property(sprite, "position:x", original_pos.x + offset, shake_duration)
+	
+	# 最後回到原位
+	move_tween.tween_property(sprite, "position:x", original_pos.x, shake_duration)
 
 func play_character_death_effect(sprite: TextureRect, hp_bar: ProgressBar) -> Tween:
 	var tween = create_tween().set_parallel(true)
@@ -585,6 +604,21 @@ func play_level_up_effect():
 	# ⏳ 等待升級音效播放完畢
 	if audio_players.has("level_up"):
 		await audio_players["level_up"].finished
+
+func play_attack_movement_effect(sprite: TextureRect, offset_x: float):
+	if not sprite: return
+	var original_pos = sprite.position
+	var tween = create_tween()
+	
+	if sprite == player_sprite:
+		if player_effect_tween and player_effect_tween.is_valid(): player_effect_tween.kill()
+		player_effect_tween = tween
+	else:
+		if enemy_effect_tween and enemy_effect_tween.is_valid(): enemy_effect_tween.kill()
+		enemy_effect_tween = tween
+		
+	tween.tween_property(sprite, "position:x", original_pos.x + offset_x, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(sprite, "position:x", original_pos.x, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 
 func play_floating_text(target: Control, text: String, color: Color = Color(1, 0, 0, 1)):
 	if not target: return
