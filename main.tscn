@@ -451,4 +451,6 @@ offset_left = 1026.0
 offset_top = 609.0
 offset_right = 1139.0
 offset_bottom = 640.0
-text = "🔊 Sound ON"
+text = "■ Sound ON"
+alignment = 0
+theme_override_font_sizes/font_size = 14

@@ -132,10 +132,12 @@ func _ready() -> void:
 func create_reset_button():
 	var reset_btn = Button.new()
 	reset_btn.name = "ResetButton"
-	reset_btn.text = "Reset Game"
+	reset_btn.text = "■ Reset Game"
 	
 	# 設定位置與大小：使其與 MuteButton 屬性一致
 	reset_btn.custom_minimum_size = Vector2(113, 31)
+	reset_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT # 靠左對齊
+	reset_btn.add_theme_font_size_override("font_size", 14) # 強制大小
 	add_child(reset_btn)
 	reset_btn.position = Vector2(1026, 573)
 	
@@ -230,9 +232,9 @@ func toggle_mute():
 	AudioServer.set_bus_mute(master_bus_index, is_muted)
 	
 	if is_muted:
-		mute_button.text = "🔇 Sound OFF"
+		mute_button.text = "□ Sound OFF"
 	else:
-		mute_button.text = "🔊 Sound ON"
+		mute_button.text = "■ Sound ON"
 
 # 🪙 金幣飛行特效資源
 var coin_texture = preload("res://assets/coin_icon.png")
