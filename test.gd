@@ -419,7 +419,7 @@ func gain_exp(amount: int):
 	var leveled_up = false
 	
 	while player_current_exp >= player_next_level_exp:
-		player_current_exp -= player_next_level_exp
+		player_current_exp = 0
 		player_level += 1
 		player_next_level_exp = int(player_next_level_exp * 1.5)
 		
