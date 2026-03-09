@@ -127,16 +127,15 @@ func show_offline_income_popup(seconds: float, gold: int):
 	style.content_margin_top = 15
 	popup_card.add_theme_stylebox_override("panel", style)
 	
-	ui_layer.add_child(popup_card) # 👈 加入層級中
+	ui_layer.add_child(popup_card)
 	popup_card.custom_minimum_size = Vector2(400, 250)
 	
-	# 🎯 修正置中邏輯
-	popup_card.anchors_preset = Control.PRESET_CENTER
-	popup_card.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	popup_card.grow_vertical = Control.GROW_DIRECTION_BOTH
-	
-	# 設定初始位置 (基於 CanvasLayer)
-	popup_card.position = (get_viewport_rect().size / 2.0) - (popup_card.custom_minimum_size / 2.0)
+	# 🎯 參考 SlotMachineFrame 設定方法：使用絕對像素位置 (Top-Left 模式)
+	popup_card.layout_mode = 0
+	popup_card.offset_left = 376
+	popup_card.offset_top = 199
+	popup_card.offset_right = 776
+	popup_card.offset_bottom = 449
 	
 	var layout = VBoxContainer.new()
 	layout.add_theme_constant_override("separation", 15)
@@ -195,7 +194,8 @@ func show_offline_income_popup(seconds: float, gold: int):
 	# 點擊按鈕後的邏輯
 	ok_btn.pressed.connect(func():
 		save_game_data()
-		ui_layer.queue_free() # 👈 直接清除整層，遮罩跟彈窗都會消失
+		overlay.queue_free()
+		popup_card.queue_free()
 	)
 
 var player_textures = {
@@ -255,19 +255,15 @@ func _ready() -> void:
 	update_ui()
 	init_battle_system()
 	
-	# 🌟 自動讀取存檔
-	load_game_data()
-	
-	# 🌟 強行設定縮放中心點為圖片中心，避免被 Container 重置
-	player_sprite.pivot_offset = Vector2(75, 75)
-	enemy_sprite.pivot_offset = Vector2(75, 75)
-	
 	enemy_node.visible = false
 	is_in_battle = false
 	update_player_appearance()
 
 	# 🗑️ 動態產生「清除存檔」按鈕
 	create_reset_button()
+	
+	# 🌟 自動讀取存檔 (移動到最後，確保後產生的 UI 能被 load 階段產生的彈窗覆蓋)
+	load_game_data()
 
 func create_reset_button():
 	var reset_btn = Button.new()
@@ -315,11 +311,102 @@ func create_reset_button():
 		get_tree().reload_current_scene()
 	)
 	
-	# 按下按鈕時顯示視窗
+	# 點擊按鈕時顯示自定義確認視窗 (改用與收益彈窗相同的設計)
 	reset_btn.pressed.connect(func():
-		confirm_dialog.popup_centered()
-		# 🌟 預設焦點在「BACK TO SAFETY」綠色按鈕上
-		cancel_btn.grab_focus()
+		show_custom_reset_dialog()
+	)
+
+# 🗑️ 自定義重置確認彈窗 (解決跨平台位置偏移問題)
+func show_custom_reset_dialog():
+	var ui_layer = CanvasLayer.new()
+	ui_layer.layer = 101
+	add_child(ui_layer)
+	
+	var overlay = ColorRect.new()
+	overlay.color = Color(0, 0, 0, 0.8)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	ui_layer.add_child(overlay)
+	
+	var card = PanelContainer.new()
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.12, 0.12, 1.0)
+	style.set_corner_radius_all(20)
+	style.set_border_width_all(2)
+	style.border_color = Color(1.0, 0.2, 0.2, 0.8) # 更亮的紅色邊框
+	style.shadow_color = Color(0, 0, 0, 0.6)
+	style.shadow_size = 25
+	style.content_margin_bottom = 25
+	style.content_margin_top = 20
+	style.content_margin_left = 30
+	style.content_margin_right = 30
+	card.add_theme_stylebox_override("panel", style)
+	
+	ui_layer.add_child(card)
+	card.custom_minimum_size = Vector2(420, 240)
+	card.layout_mode = 0
+	card.offset_left = 366
+	card.offset_top = 204
+	card.offset_right = 786
+	card.offset_bottom = 444
+	
+	var layout = VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 25)
+	card.add_child(layout)
+	
+	var title = Label.new()
+	title.text = "DANGER: RESET GAME"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_color_override("font_color", Color(1, 0.3, 0.3))
+	title.add_theme_font_size_override("font_size", 22)
+	title.add_theme_constant_override("outline_size", 4)
+	layout.add_child(title)
+	
+	var msg = Label.new()
+	msg.text = "Are you sure you want to PERMANENTLY\nreset the game? This will clear everything."
+	msg.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	msg.add_theme_font_size_override("font_size", 14)
+	layout.add_child(msg)
+	
+	var btn_hbox = HBoxContainer.new()
+	btn_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_hbox.add_theme_constant_override("separation", 30)
+	layout.add_child(btn_hbox)
+	
+	# --- 現代扁平外框風 YES 按鈕 (紅色) ---
+	var yes_btn = Button.new()
+	yes_btn.text = " YES, RESET "
+	yes_btn.custom_minimum_size = Vector2(130, 40)
+	
+	var yes_style = StyleBoxFlat.new()
+	yes_style.bg_color = Color(0.4, 0.1, 0.1, 0.7) # 半透明深紅
+	yes_style.set_corner_radius_all(5)
+	yes_style.set_border_width_all(2)
+	yes_style.border_color = Color(1.0, 0.3, 0.3, 0.8) # 明亮紅邊框
+	yes_btn.add_theme_stylebox_override("normal", yes_style)
+	yes_btn.add_theme_color_override("font_color", Color(1, 0.8, 0.8))
+	btn_hbox.add_child(yes_btn)
+	
+	# --- 現代扁平外框風 NO 按鈕 (綠色) ---
+	var no_btn = Button.new()
+	no_btn.text = " BACK TO SAFETY "
+	no_btn.custom_minimum_size = Vector2(160, 40)
+	
+	var no_style = StyleBoxFlat.new()
+	no_style.bg_color = Color(0.1, 0.3, 0.1, 0.7) # 半透明深綠
+	no_style.set_corner_radius_all(5)
+	no_style.set_border_width_all(2)
+	no_style.border_color = Color(0.3, 1.0, 0.3, 0.8) # 明亮綠邊框
+	no_btn.add_theme_stylebox_override("normal", no_style)
+	no_btn.add_theme_color_override("font_color", Color(0.8, 1, 0.8))
+	btn_hbox.add_child(no_btn)
+	
+	yes_btn.pressed.connect(func():
+		SaveLoad.delete_save()
+		get_tree().reload_current_scene()
+	)
+	
+	no_btn.pressed.connect(func():
+		ui_layer.queue_free()
 	)
 
 func update_player_appearance():
