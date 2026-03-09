@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://dp6m0u4n6b1p2"]
+
+[ext_resource type="Script" path="res://splash_screen.gd" id="1_script"]
+[ext_resource type="VideoStream" path="res://assets/intro.ogv" id="2_video"]
+
+[node name="SplashScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="VideoStreamPlayer" type="VideoStreamPlayer" parent="."]
+layout_mode = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+stream = ExtResource("2_video")
+autoplay = true
+expand = true
+buffering_msec = 500
+
+[node name="SkipButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 832.0
+offset_top = 548.0
+offset_right = 1132.0
+offset_bottom = 628.0
+theme_override_colors/font_color = Color(1, 1, 1, 0.6)
+theme_override_font_sizes/font_size = 24
+text = "SKIP INTRO >> "
+flat = true
+alignment = 2
