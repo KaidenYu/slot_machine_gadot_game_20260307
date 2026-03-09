@@ -50,6 +50,10 @@ var enemy_current_hp = 500
 var is_in_battle = false
 var just_encountered = false
 
+# 🕒 離線收益系統設定
+var offline_income_gold_per_sec = 0.2 # 每 5 秒基礎收益 (0.2 gold/sec)
+var offline_income_max_seconds = 86400 # 最大累計時間 (24小時)
+
 var enemies_data = [
 	{"name": "哥布林 (Goblin)", "texture": preload("res://assets/goblin.png"), "max_hp": 150, "str": 10, "weight": 40},
 	{"name": "幽靈 (Ghost)", "texture": preload("res://assets/ghost.png"), "max_hp": 200, "str": 15, "weight": 25},
@@ -57,6 +61,142 @@ var enemies_data = [
 	{"name": "石巨人 (Golem)", "texture": preload("res://assets/golem.png"), "max_hp": 800, "str": 25, "weight": 10},
 	{"name": "惡龍 (Dragon)", "texture": preload("res://assets/dragon.png"), "max_hp": 600, "str": 50, "weight": 5}
 ]
+
+# 🕒 離線收益計算邏輯
+func calculate_offline_income(last_save_time: float):
+	var current_time = Time.get_unix_time_from_system()
+	var elapsed_seconds = current_time - last_save_time
+	
+	if elapsed_seconds <= 0:
+		return
+	
+	if elapsed_seconds > offline_income_max_seconds:
+		elapsed_seconds = offline_income_max_seconds
+	
+	# 收益公式：每秒 1 金幣
+	var earned_gold = int(elapsed_seconds * offline_income_gold_per_sec)
+	
+	if earned_gold > 0:
+		current_gold += earned_gold
+		# 顯示收益視窗
+		show_offline_income_popup(elapsed_seconds, earned_gold)
+
+	# 🕒 顯示離線收益彈窗
+func show_offline_income_popup(seconds: float, gold: int):
+	# 計算離線的小時、分鐘、秒
+	var hrs = int(seconds / 3600.0)
+	var mins = int((int(seconds) % 3600) / 60.0)
+	var secs = int(int(seconds) % 60)
+	var time_str = ""
+	
+	if hrs > 0:
+		time_str += str(hrs) + "h "
+	if mins > 0:
+		time_str += str(mins) + "m "
+	if secs > 0 or time_str == "":
+		time_str += str(secs) + "s"
+	
+	# 🏗️ 建立最高層級容器 (CanvasLayer)
+	# 這能確保遮罩蓋住所有遊戲中的 UI 元件 (包含 Reset 按鈕)
+	var ui_layer = CanvasLayer.new()
+	ui_layer.layer = 100 # 設定一個很高的數字，確保在最頂層
+	add_child(ui_layer)
+	
+	# 🌑 建立黑色半透明遮罩
+	var overlay = ColorRect.new()
+	overlay.color = Color(0, 0, 0, 0.8)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	ui_layer.add_child(overlay) # 👈 加入層級中
+	
+	# 🎨 建立自定義彈窗容器 (PanelContainer)
+	var popup_card = PanelContainer.new()
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.12, 0.12, 1.0)
+	style.corner_radius_top_left = 20
+	style.corner_radius_top_right = 20
+	style.corner_radius_bottom_left = 20
+	style.corner_radius_bottom_right = 20
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(0.8, 0.6, 0.2, 0.5) 
+	style.shadow_color = Color(0, 0, 0, 0.5)
+	style.shadow_size = 20
+	style.content_margin_bottom = 20
+	style.content_margin_top = 15
+	popup_card.add_theme_stylebox_override("panel", style)
+	
+	ui_layer.add_child(popup_card) # 👈 加入層級中
+	popup_card.custom_minimum_size = Vector2(400, 250)
+	
+	# 🎯 修正置中邏輯
+	popup_card.anchors_preset = Control.PRESET_CENTER
+	popup_card.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	popup_card.grow_vertical = Control.GROW_DIRECTION_BOTH
+	
+	# 設定初始位置 (基於 CanvasLayer)
+	popup_card.position = (get_viewport_rect().size / 2.0) - (popup_card.custom_minimum_size / 2.0)
+	
+	var layout = VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 15)
+	popup_card.add_child(layout)
+	
+	# 自定義標題
+	var title_label = Label.new()
+	title_label.text = "OFFLINE REWARDS"
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_label.add_theme_font_size_override("font_size", 20)
+	title_label.add_theme_color_override("font_color", Color(0.8, 0.6, 0.2)) # 金色標題
+	layout.add_child(title_label)
+	
+	var info_label = Label.new()
+	info_label.text = "Welcome back, Hero!\nWhile you were away (" + time_str + "),\nyour adventure party collected some loot:"
+	info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	layout.add_child(info_label)
+	
+	# 💰 金幣獎勵區域
+	var reward_hbox = HBoxContainer.new()
+	reward_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	reward_hbox.add_theme_constant_override("separation", 15)
+	layout.add_child(reward_hbox)
+	
+	var icon_rect = TextureRect.new()
+	icon_rect.texture = preload("res://assets/coin_icon.png")
+	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon_rect.custom_minimum_size = Vector2(45, 45)
+	reward_hbox.add_child(icon_rect)
+	
+	var reward_label = Label.new()
+	reward_label.text = "+" + str(gold) + " Gold"
+	reward_label.add_theme_font_size_override("font_size", 36)
+	reward_label.add_theme_color_override("font_color", Color(1, 0.84, 0))
+	reward_hbox.add_child(reward_label)
+	
+	# 自定義 OK 按鈕
+	var ok_btn = Button.new()
+	ok_btn.text = " COLLECT "
+	ok_btn.custom_minimum_size = Vector2(120, 40)
+	ok_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	layout.add_child(ok_btn)
+	
+	# 按鈕樣式
+	var btn_style = StyleBoxFlat.new()
+	btn_style.bg_color = Color(0.2, 0.2, 0.2, 1.0)
+	btn_style.corner_radius_top_left = 10
+	btn_style.corner_radius_top_right = 10
+	btn_style.corner_radius_bottom_left = 10
+	btn_style.corner_radius_bottom_right = 10
+	btn_style.border_width_bottom = 4
+	btn_style.border_color = Color(0, 0, 0, 0.3)
+	ok_btn.add_theme_stylebox_override("normal", btn_style)
+	
+	# 點擊按鈕後的邏輯
+	ok_btn.pressed.connect(func():
+		save_game_data()
+		ui_layer.queue_free() # 👈 直接清除整層，遮罩跟彈窗都會消失
+	)
 
 var player_textures = {
 	"low": preload("res://assets/player1.png"),
@@ -781,7 +921,8 @@ func save_game_data():
 		"next_level_exp": player_next_level_exp,
 		"max_hp": player_max_hp,
 		"hp": player_current_hp,
-		"str": player_str
+		"str": player_str,
+		"last_save_time": Time.get_unix_time_from_system() # 紀錄最後操作時間
 	}
 	SaveLoad.save_game(data)
 
@@ -798,6 +939,11 @@ func load_game_data():
 	player_max_hp = data.get("max_hp", 100)
 	player_current_hp = data.get("hp", 100)
 	player_str = data.get("str", 15)
+	
+	# 🕒 處理離線收益
+	var last_save_time = data.get("last_save_time", 0.0)
+	if last_save_time > 0:
+		calculate_offline_income(last_save_time)
 	
 	update_ui()
 	update_player_appearance()
