@@ -26,6 +26,7 @@ const SaveLoad = preload("res://save_load.gd")
 @onready var heal_button = $Player/HBoxContainer/PotionFrame/HealButton
 @onready var level_label = $Player/LevelLabel
 @onready var mute_button = $MuteButton
+@onready var background = $Background
 
 var player_effect_tween: Tween
 var enemy_effect_tween: Tween
@@ -120,7 +121,7 @@ func show_offline_income_popup(seconds: float, gold: int):
 	style.border_width_top = 2
 	style.border_width_right = 2
 	style.border_width_bottom = 2
-	style.border_color = Color(0.8, 0.6, 0.2, 0.5) 
+	style.border_color = Color(0.8, 0.6, 0.2, 0.5)
 	style.shadow_color = Color(0, 0, 0, 0.5)
 	style.shadow_size = 20
 	style.content_margin_bottom = 20
@@ -258,6 +259,10 @@ func _ready() -> void:
 	enemy_node.visible = false
 	is_in_battle = false
 	update_player_appearance()
+
+	# 🌟 設定主角 Pivot 為腳底中心，以便進行擺動動畫
+	# 由於是 TextureRect，我們先等待一幀確保 size 已計算，或直接設定
+	player_sprite.pivot_offset = Vector2(player_sprite.size.x / 2, player_sprite.size.y)
 
 	# 🗑️ 動態產生「清除存檔」按鈕
 	create_reset_button()
@@ -589,6 +594,10 @@ func spin_reels():
 	update_ui()
 	save_game_data() # 存檔：扣錢後立即存檔，防止刷新大法
 	just_encountered = false
+	
+	# 🚶 如果不在戰鬥中，播放走路動畫 (配合旋轉時間約 2.4 秒)
+	if not is_in_battle:
+		play_walk_animation(2.4)
 	
 	play_sound("spin")
 	
@@ -924,6 +933,48 @@ func play_attack_movement_effect(sprite: TextureRect, offset_x: float):
 		
 	tween.tween_property(sprite, "position:x", original_pos.x + offset_x, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.tween_property(sprite, "position:x", original_pos.x, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+
+func play_walk_animation(duration: float):
+	if not player_sprite: return
+	
+	# 先清理舊的動畫
+	if player_effect_tween and player_effect_tween.is_valid():
+		player_effect_tween.kill()
+	
+	var original_pos_y = player_sprite.position.y
+	# 計算循環次數 (0.6秒一次左右踏步)
+	var loops = int(duration / 0.6)
+	player_effect_tween = create_tween().set_loops(loops)
+	
+	# 🌟 同步滾動背景 (向左移動)
+	var bg_material = background.material as ShaderMaterial
+	if bg_material:
+		var current_scroll = bg_material.get_shader_parameter("scroll_offset")
+		var bg_tween = create_tween()
+		bg_tween.tween_method(func(v): 
+			bg_material.set_shader_parameter("scroll_offset", v)
+		, current_scroll, current_scroll + 0.1 * loops, duration).set_trans(Tween.TRANS_LINEAR)
+	
+	# 模擬左腳踏步：往左傾斜 + 微跳
+	player_effect_tween.tween_property(player_sprite, "rotation_degrees", 2, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	player_effect_tween.parallel().tween_property(player_sprite, "position:y", original_pos_y - 5, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	player_effect_tween.tween_property(player_sprite, "rotation_degrees", 4, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	player_effect_tween.parallel().tween_property(player_sprite, "position:y", original_pos_y, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	print("player_effect_tween: ", player_effect_tween)
+	
+	# 模擬右腳踏步：往右傾斜 + 回到地面
+	player_effect_tween.tween_property(player_sprite, "rotation_degrees", 0, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	player_effect_tween.parallel().tween_property(player_sprite, "position:y", original_pos_y - 5, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	player_effect_tween.tween_property(player_sprite, "rotation_degrees", -4, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	player_effect_tween.parallel().tween_property(player_sprite, "position:y", original_pos_y, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	print("player_effect_tween: ", player_effect_tween)
+	
+	# 在循環結束後執行的恢復動作 (chain 到 tween 後面)
+	player_effect_tween.finished.connect(func():
+		var reset_tween = create_tween().set_parallel(true)
+		reset_tween.tween_property(player_sprite, "rotation_degrees", 0, 0.1)
+		reset_tween.tween_property(player_sprite, "position:y", original_pos_y, 0.1)
+	)
 
 func play_floating_text(target: Control, text: String, color: Color = Color(1, 0, 0, 1)):
 	if not target: return

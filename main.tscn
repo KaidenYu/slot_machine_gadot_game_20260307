@@ -6,6 +6,8 @@
 [ext_resource type="Texture2D" uid="uid://cgkgdhes83b34" path="res://assets/coin_icon.png" id="4_coin"]
 [ext_resource type="Texture2D" uid="uid://br81y78ybokuj" path="res://assets/bet_icon.png" id="5_bet_icon"]
 [ext_resource type="Texture2D" uid="uid://ckbasrwmpwj3f" path="res://assets/red_potion.png" id="6_potion"]
+[ext_resource type="Texture2D" path="res://assets/background.png" id="7_bg"]
+[ext_resource type="Shader" path="res://scroll.gdshader" id="8_scroll"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1bvp3"]
 bg_color = Color(0.32156864, 0.7254902, 0, 1)
@@ -196,6 +198,10 @@ shadow_size = 2
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_0xm2m"]
 load_path = "res://.godot/imported/dragon.png-07e3423f5a8614e88193baf4eb1ce12b.ctex"
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_scroll"]
+shader = ExtResource("8_scroll")
+shader_parameter/scroll_offset = 0.0
+
 [node name="main" type="Control" unique_id=559064535]
 layout_mode = 3
 anchors_preset = 15
@@ -213,6 +219,14 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 1)
+
+[node name="Background" type="TextureRect" parent="." unique_id=99999999]
+material = SubResource("ShaderMaterial_scroll")
+layout_mode = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+texture = ExtResource("7_bg")
+stretch_mode = 0
 
 [node name="SlotMachineFrame" type="TextureRect" parent="." unique_id=357997982]
 layout_mode = 0
